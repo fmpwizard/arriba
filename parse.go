@@ -5,26 +5,33 @@ import (
 	"fmt"
 )
 
+//Node holds the function name taken from the data-lift attribute and
+// the NodeSeq is the raw inner html that we will pass to the function on the data-lift attribute
 type Node struct {
 	FunctionName string `xml:"data-lift,attr"`
 	NodeSeq      string `xml:",innerxml"`
 }
+
+//Result holds a slice of Node values
 type Result struct {
 	XMLName   xml.Name
 	Functions []Node `xml:",any"`
 }
 
-func GetFunctions(html string) {
-	err, v := MarshalNode(html)
+//GetFunctions takes the complete html of a page and returns a map of
+//function names => html that we should pass to those functions
+func GetFunctions(html string) map[string]string {
+	err, v := marshalNode(html)
 	if err != nil {
 		fmt.Printf("Error 1: %v\n\n", err)
-		return
+		return nil
 	}
-	Loop(v)
+	return loop(v)
 }
 
-func MarshalNode(html string) (error, Result) {
+func marshalNode(html string) (error, Result) {
 	v := Result{}
+	//horrible hack to get the complete html that is inside the node, otherwise we only get child nodes and miss data
 	err := xml.Unmarshal([]byte("<p>"+html+"</p>"), &v)
 	if err != nil {
 		return err, v
@@ -32,17 +39,21 @@ func MarshalNode(html string) (error, Result) {
 	return nil, v
 }
 
-func Loop(v Result) {
+func loop(v Result) map[string]string {
+	var funccMap = make(map[string]string)
 	for _, innerNode := range v.Functions {
 		if innerNode.FunctionName != "" {
-			//fmt.Println("Found Function: " + innerNode.FunctionName)
-			fmt.Printf("Calling: %v( %v )\n\n", innerNode.FunctionName, innerNode.NodeSeq)
+			funccMap[innerNode.FunctionName] = innerNode.NodeSeq
 		}
 
-		err, node := MarshalNode(innerNode.NodeSeq)
+		err, node := marshalNode(innerNode.NodeSeq)
 		if err != nil {
 			fmt.Printf("Error 2: %v ==>> %v\n\n", innerNode.NodeSeq, err)
 		}
-		Loop(node)
+		//we have more html, so we recurse, but we need to keep the old map of functions
+		for k, v := range loop(node) {
+			funccMap[k] = v
+		}
 	}
+	return funccMap
 }
