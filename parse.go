@@ -12,6 +12,12 @@ type Node struct {
 	NodeSeq      string `xml:",innerxml"`
 }
 
+func push2Stack(array []Node, stack *Stack) {
+	for _, item := range array {
+		stack.Push(item)
+	}
+}
+
 //Result holds a slice of Node values
 type Result struct {
 	XMLName   xml.Name
@@ -40,20 +46,24 @@ func marshalNode(html string) (error, Result) {
 }
 
 func loop(v Result) map[string]string {
-	var funccMap = make(map[string]string)
-	for _, innerNode := range v.Functions {
+	var stack = new(Stack)
+
+	var functionMap = make(map[string]string)
+	// Stack initialization with array elements
+	push2Stack(v.Functions, stack)
+	for stack.Size() > 0 {
+		innerNode := stack.Pop().(Node)
 		if innerNode.FunctionName != "" {
-			funccMap[innerNode.FunctionName] = innerNode.NodeSeq
+			functionMap[innerNode.FunctionName] = innerNode.NodeSeq
 		}
 
 		err, node := marshalNode(innerNode.NodeSeq)
 		if err != nil {
 			fmt.Printf("Error 2: %v ==>> %v\n\n", innerNode.NodeSeq, err)
 		}
-		//we have more html, so we recurse, but we need to keep the old map of functions
-		for k, v := range loop(node) {
-			funccMap[k] = v
-		}
+		// we have more html, add the pending nodes to the stack
+
+		push2Stack(node.Functions, stack)
 	}
-	return funccMap
+	return functionMap
 }
