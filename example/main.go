@@ -4,7 +4,6 @@ package main
 //cd into the example folder and run go run main.go
 
 import (
-	"fmt"
 	"github.com/fmpwizard/arriba"
 	"io/ioutil"
 	"net/http"
@@ -29,17 +28,20 @@ func home(rw http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	for _, partialHTML := range arriba.GetFunctions(string(t)) {
-		//This is a silly way to replace the old html with new one, because
-		//it will fail if we have the same raw html more than once.
-		//t = []byte(strings.Replace(string(t), html, funcMap[functionName](html), 1))
-		fmt.Printf("Function name : %+v\n\n", partialHTML.FunctionName)
-		fmt.Printf("Function html : %+v\n\n", partialHTML.FunctionHtml)
-		fmt.Printf("Raw HTML : %+v\n\n", partialHTML.RawHTML)
-	}
+	//for _, _ = range arriba.GetFunctions(string(t)) {
+	//This is a silly way to replace the old html with new one, because
+	//it will fail if we have the same raw html more than once.
+	//t = []byte(strings.Replace(string(t), html, funcMap[functionName](html), 1))
+	//fmt.Printf("Function name : %+v\n\n", partialHTML.FunctionName)
+	//fmt.Printf("Function html : %+v\n\n", partialHTML.FunctionHtml)
+	//fmt.Printf("Raw HTML : %+v\n\n", partialHTML.RawHTML)
+	//fmt.Printf("Raw HTML : %+v\n\n", partialHTML.RawHTML)
+	//}
+
+	_, value := arriba.ProcessHTML(string(t), string(t))
 
 	rw.Header().Add("Content-Type", "text/html; charset=UTF-8")
-	rw.Write(t)
+	rw.Write([]byte(value))
 
 }
 
