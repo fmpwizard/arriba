@@ -83,7 +83,7 @@ func MarshallElem(in string) string {
 								break Loop
 							}
 						}
-						fmt.Printf(" ==>> snipetHTML  %v\n\n", snipetHTML)
+						fmt.Printf(" ==>> snipetHTML  %v\n", snipetHTML)
 					}
 
 				}
@@ -100,18 +100,19 @@ func MarshallElem(in string) string {
 			}
 
 			//fmt.Printf("completeHTML: %v\n", completeHTML)
-			fmt.Printf("functionName: %v\n", functionName)
+			if functionName != "" {
+				fmt.Printf("functionName: %v\n", functionName)
+			}
 		case xml.CharData:
-			fmt.Printf("\n\nCharData: %+v\n", string(element))
+			fmt.Printf("CharData: %+v\n", string(element))
 		case xml.EndElement:
-			fmt.Printf("\n\nEnd: %+v\n", element.Name.Local)
 			completeHTML = completeHTML + "</" + element.Name.Local + ">"
 		case xml.Comment:
-			fmt.Printf("\n\nComment: %+v\n", element)
+			fmt.Printf("Comment: %+v\n", element)
 		case xml.Directive:
-			fmt.Printf("\n\nDirective: %+v\n", string(element))
+			fmt.Printf("Directive: %+v\n", string(element))
 		case xml.Token:
-			fmt.Printf("\n\n4: %+v\n", element)
+			fmt.Printf("4: %+v\n", element)
 
 		default:
 			fmt.Errorf("\nIf yo uare here, you are missing a type: %v\n", element)
