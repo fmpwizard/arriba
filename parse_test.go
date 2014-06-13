@@ -1,13 +1,14 @@
 package arriba
 
 import (
-	"fmt"
 	"testing"
 )
 
 func TestMarshallElem(t *testing.T) {
 	res := MarshallElem(html2)
-	fmt.Printf("res is %+v\n", res)
+	if res != html2 {
+		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html2, res)
+	}
 }
 
 const html1 = (`
@@ -27,4 +28,5 @@ const html1 = (`
 `)
 
 const html2 = (`<html><head></head><body><div data-lift="ChangeName"><p name="name">Diego</p><p class="pretty-last-name">Medina</p></div></body></html>`)
+const html2Expected = (`<html><head></head><body><div data-lift="ChangeName"><p name="name">Gabriel</p><p class="pretty-last-name">Medina</p></div></body></html>`)
 const html3 = (`<span data-lift="ChangeTime">Welcome to your Lift app at <span id="time">Time goes here</span></span>`)
