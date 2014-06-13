@@ -76,6 +76,10 @@ func MarshallElem(in string) string {
 							snipetHTML = snipetHTML + "</" + innerTok.Name.Local + ">"
 							close++
 							if open == close { //do we have our matching closing tag? //This fails with autoclose tags I think
+								rawHTML := snipetHTML
+								completeHTML = completeHTML + ChangeName(rawHTML) //hard coded for now
+								snipetHTML = ""
+								parentTag = ""
 								break Loop
 							}
 						}
@@ -84,17 +88,18 @@ func MarshallElem(in string) string {
 
 				}
 			}
-			if snipetHTML != "" {
+			/*if snipetHTML != "" {
 				rawHTML := snipetHTML
 				completeHTML = completeHTML + ChangeName(rawHTML) //hard coded for now
 			}
 
-			fmt.Printf("Start: %v\n", element.Name.Local)
-			if snipetHTML == "" {
+			*/
+			//fmt.Printf("Start: %v\n", element.Name.Local)
+			if !strings.HasSuffix(completeHTML, ">") {
 				completeHTML = completeHTML + ">"
 			}
 
-			fmt.Printf("completeHTML: %v\n", completeHTML)
+			//fmt.Printf("completeHTML: %v\n", completeHTML)
 			fmt.Printf("functionName: %v\n", functionName)
 		case xml.CharData:
 			fmt.Printf("\n\nCharData: %+v\n", string(element))
@@ -113,7 +118,6 @@ func MarshallElem(in string) string {
 		}
 
 	}
-	fmt.Printf("completeHTML %v \n", completeHTML)
 	return completeHTML
 }
 

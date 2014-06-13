@@ -4,10 +4,17 @@ import (
 	"testing"
 )
 
-func TestMarshallElem(t *testing.T) {
+func TestMarshallElem1(t *testing.T) {
 	res := MarshallElem(html2)
 	if res != html2Expected {
 		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html2Expected, res)
+	}
+}
+
+func TestMarshallElem2(t *testing.T) {
+	res := MarshallElem(html4)
+	if res != html4Expected {
+		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html4Expected, res)
 	}
 }
 
@@ -37,5 +44,4 @@ const html4 = (`
   <div data-lift="ChangeName"><p name="name">Diego</p><p class="pretty-last-name">Medina</p></div>
   <div data-lift="ChangeName"><p name="name">Diego</p><p class="pretty-last-name">Medina</p></div>
 </body></html>`)
-const html4Expected = (`
-<html><head></head><body><div data-lift="ChangeName"><p name="name">Gabriel</p><p class="pretty-last-name">Medina</p></div><div data-lift="ChangeName"><p name="name">Gabriel</p><p class="pretty-last-name">Medina</p></div></body></html>`)
+const html4Expected = (`<html><head></head><body><div data-lift="ChangeName"><p name="name">Gabriel</p><p class="pretty-last-name">Medina</p></div><div data-lift="ChangeName"><p name="name">Gabriel</p><p class="pretty-last-name">Medina</p></div></body></html>`)
