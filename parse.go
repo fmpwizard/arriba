@@ -43,13 +43,14 @@ func MarshallElem(in string) string {
 			}
 			functionName := ""
 			for _, value := range element.Attr {
-				parentTag = parentTag + " " + value.Name.Local + "=\"" + value.Value + "\""
-				if value.Name.Local == "data-lift" {
-					_, res := processSnippet(value, decoder, parentTag)
-					parentTag = ""
-					completeHTML = completeHTML + res
+				//parentTag = parentTag + " " + value.Name.Local + "=\"" + value.Value + "\""
+				//if value.Name.Local == "data-lift" {
+				_, res := processSnippet(value, decoder, parentTag)
+				//	parentTag = ""
+				//	fmt.Println("1111 " + res)
+				completeHTML = completeHTML + res
 
-				}
+				//}
 			}
 			if !strings.HasSuffix(completeHTML, ">") {
 				completeHTML = completeHTML + ">"
@@ -84,35 +85,45 @@ func processSnippet(value xml.Attr, decoder *xml.Decoder, parentTag string) (err
 	open := 1
 	closingTags := 0
 
-	for {
-		tok, err := decoder.Token()
-		if err != nil {
-			return err, ""
-		}
-		switch innerTok := tok.(type) {
-		case xml.StartElement:
-			if snippetHTML == "" {
-				snippetHTML = parentTag + ">" //we found first inner node, so close the parent
-			}
+	parentTag = parentTag + " " + value.Name.Local + "=\"" + value.Value + "\""
+	if value.Name.Local == "data-lift" {
+		//_, res := processSnippet(value, decoder, parentTag)
 
-			snippetHTML = snippetHTML + "<" + innerTok.Name.Local
-			for _, attr := range innerTok.Attr {
-				snippetHTML = snippetHTML + " " + attr.Name.Local + "=\"" + attr.Value + "\""
+		for {
+			tok, err := decoder.Token()
+			if err != nil {
+				return err, ""
 			}
-			snippetHTML = snippetHTML + ">"
-			open++
-		case xml.CharData:
-			snippetHTML = snippetHTML + string(innerTok)
+			switch innerTok := tok.(type) {
+			case xml.StartElement:
+				if snippetHTML == "" {
+					snippetHTML = parentTag + ">" //we found first inner node, so close the parent
+				}
 
-		case xml.EndElement:
-			snippetHTML = snippetHTML + "</" + innerTok.Name.Local + ">"
-			closingTags++
-			if open == closingTags { //do we have our matching closing tag? //This fails with autoclose tags I think
-				return nil, ChangeName(snippetHTML)
+				snippetHTML = snippetHTML + "<" + innerTok.Name.Local
+				for _, attr := range innerTok.Attr {
+					snippetHTML = snippetHTML + " " + attr.Name.Local + "=\"" + attr.Value + "\""
+				}
+				snippetHTML = snippetHTML + ">"
+				open++
+			case xml.CharData:
+				snippetHTML = snippetHTML + string(innerTok)
+
+			case xml.EndElement:
+				snippetHTML = snippetHTML + "</" + innerTok.Name.Local + ">"
+				closingTags++
+				if open == closingTags { //do we have our matching closing tag? //This fails with autoclose tags I think
+					return nil, ChangeName(snippetHTML)
+				}
 			}
+			fmt.Printf(" ==>> snippetHTML  %v\n", snippetHTML)
 		}
-		fmt.Printf(" ==>> snippetHTML  %v\n", snippetHTML)
+		parentTag = ""
+		//fmt.Println("1111 " + res)
+		//completeHTML = completeHTML + res
+
 	}
+	return nil, ""
 }
 
 func ChangeTime(html string) string {
