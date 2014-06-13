@@ -25,7 +25,6 @@ func MarshallElem(in string) string {
 	funcMap["ChangeName"] = ChangeName
 	completeHTML := ""
 	parentTag := ""
-	//snippetHTML := ""
 
 	decoder := xml.NewDecoder(bytes.NewBufferString(in))
 
@@ -42,32 +41,20 @@ func MarshallElem(in string) string {
 			} else {
 				completeHTML = "<" + element.Name.Local
 			}
-			/*open := 1
-			closingTags := 0*/
 			functionName := ""
-			//Loop:
 			for _, value := range element.Attr {
-				//fmt.Printf("Att: %v ==> value: %v\n", value.Name.Local, value.Value)
 				parentTag = parentTag + " " + value.Name.Local + "=\"" + value.Value + "\""
 				if value.Name.Local == "data-lift" {
-					_, res := processSnippet(value, decoder, parentTag, completeHTML)
+					_, res := processSnippet(value, decoder, parentTag)
 					parentTag = ""
 					completeHTML = completeHTML + res
 
 				}
 			}
-			/*if snippetHTML != "" {
-				rawHTML := snippetHTML
-				completeHTML = completeHTML + ChangeName(rawHTML) //hard coded for now
-			}
-
-			*/
-			//fmt.Printf("Start: %v\n", element.Name.Local)
 			if !strings.HasSuffix(completeHTML, ">") {
 				completeHTML = completeHTML + ">"
 			}
 
-			//fmt.Printf("completeHTML: %v\n", completeHTML)
 			if functionName != "" {
 				fmt.Printf("functionName: %v\n", functionName)
 			}
@@ -90,7 +77,7 @@ func MarshallElem(in string) string {
 	return completeHTML
 }
 
-func processSnippet(value xml.Attr, decoder *xml.Decoder, parentTag, completeHTML string) (error, string) {
+func processSnippet(value xml.Attr, decoder *xml.Decoder, parentTag string) (error, string) {
 	//functionName := value.Value
 
 	snippetHTML := ""
@@ -121,19 +108,11 @@ func processSnippet(value xml.Attr, decoder *xml.Decoder, parentTag, completeHTM
 			snippetHTML = snippetHTML + "</" + innerTok.Name.Local + ">"
 			closingTags++
 			if open == closingTags { //do we have our matching closing tag? //This fails with autoclose tags I think
-				rawHTML := snippetHTML
-				completeHTML = completeHTML + ChangeName(rawHTML) //hard coded for now
-				snippetHTML = ""
-				parentTag = ""
-				//fmt.Println("1")
-				return nil, ChangeName(rawHTML)
-				//break
+				return nil, ChangeName(snippetHTML)
 			}
 		}
 		fmt.Printf(" ==>> snippetHTML  %v\n", snippetHTML)
 	}
-	//fmt.Printf(" \n\n\n\n==========>> End  \n")
-	//return nil
 }
 
 func ChangeTime(html string) string {
