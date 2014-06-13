@@ -36,20 +36,20 @@ func MarshallElem(in string) string {
 		if token == nil {
 			break
 		}
-		switch startElement := token.(type) {
+		switch element := token.(type) {
 		case xml.StartElement:
 
 			if completeHTML != "" {
-				completeHTML = completeHTML + "<" + startElement.Name.Local
+				completeHTML = completeHTML + "<" + element.Name.Local
 			} else {
-				completeHTML = "<" + startElement.Name.Local
+				completeHTML = "<" + element.Name.Local
 			}
-			//parentTag = "<2" + startElement.Name.Local
+			//parentTag = "<2" + element.Name.Local
 
 			open := 1
 			close := 0
 		Loop:
-			for _, value := range startElement.Attr {
+			for _, value := range element.Attr {
 				//fmt.Printf("Att: %v ==> value: %v\n", value.Name.Local, value.Value)
 				parentTag = parentTag + " " + value.Name.Local + "=\"" + value.Value + "\""
 				if value.Name.Local == "data-lift" {
@@ -71,15 +71,13 @@ func MarshallElem(in string) string {
 							}
 							snipetHTML = snipetHTML + ">"
 							open++
-							//fmt.Printf("1111: %v\n", innerTok.Name.Local)
 						case xml.CharData:
 							snipetHTML = snipetHTML + string(innerTok)
 
 						case xml.EndElement:
-							//fmt.Printf("2222 %v\n", innerTok.Name.Local)
 							snipetHTML = snipetHTML + "</" + innerTok.Name.Local + ">"
 							close++
-							if open == close {
+							if open == close { //do we have our matching closing tag? //This fails with autoclose tags I think
 								fmt.Printf("End ==>> %v, %v\n", open, close)
 								//return snipetHTML
 								completeHTML = completeHTML + snipetHTML
@@ -92,27 +90,26 @@ func MarshallElem(in string) string {
 				}
 			}
 
-			fmt.Printf("Start: %v\n", startElement.Name.Local)
-			//fmt.Printf("Debug: %v\n", snipetHTML)
+			fmt.Printf("Start: %v\n", element.Name.Local)
 			if snipetHTML == "" {
 				completeHTML = completeHTML + ">"
 			}
 
 			fmt.Printf("completeHTML: %v\n", completeHTML)
 		case xml.CharData:
-			fmt.Printf("\n\nCharData: %+v\n", string(startElement))
+			fmt.Printf("\n\nCharData: %+v\n", string(element))
 		case xml.EndElement:
-			fmt.Printf("\n\nEnd: %+v\n", startElement.Name.Local)
-			completeHTML = completeHTML + "</" + startElement.Name.Local + ">"
+			fmt.Printf("\n\nEnd: %+v\n", element.Name.Local)
+			completeHTML = completeHTML + "</" + element.Name.Local + ">"
 		case xml.Comment:
-			fmt.Printf("\n\nComment: %+v\n", startElement)
+			fmt.Printf("\n\nComment: %+v\n", element)
 		case xml.Directive:
-			fmt.Printf("\n\nDirective: %+v\n", string(startElement))
+			fmt.Printf("\n\nDirective: %+v\n", string(element))
 		case xml.Token:
-			fmt.Printf("\n\n4: %+v\n", startElement)
+			fmt.Printf("\n\n4: %+v\n", element)
 
 		default:
-			fmt.Printf("\n=========$$$$$$$$$$$$$$$$\n")
+			fmt.Errorf("\nIf yo uare here, you are missing a type: %v\n", element)
 		}
 
 	}
