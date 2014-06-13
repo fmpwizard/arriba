@@ -47,7 +47,7 @@ const html2Expected = (`<html><head></head><body><div data-lift="ChangeName"><p 
 const html3 = (`<html><head></head><body>
   <div data-lift="ChangeName">
     <p name="name">Diego</p>
-    <div data-lift="ChangeName"><p name="name">Diego</p></div>
+    <div data-lift="ChangeName"><p name="name">Mariano</p></div>
   </div>
 </body></html>`)
 const html3Expected = (`<html><head></head><body><div data-lift="ChangeName"><p name="name">Gabriel</p><div data-lift="ChangeName"><p name="name">Gabriel</p></div></div></body></html>`)

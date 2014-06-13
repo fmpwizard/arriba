@@ -25,7 +25,7 @@ func MarshallElem(in string) string {
 	funcMap["ChangeName"] = ChangeName
 	completeHTML := ""
 	parentTag := ""
-	snipetHTML := ""
+	//snippetHTML := ""
 
 	decoder := xml.NewDecoder(bytes.NewBufferString(in))
 
@@ -42,54 +42,22 @@ func MarshallElem(in string) string {
 			} else {
 				completeHTML = "<" + element.Name.Local
 			}
-			open := 1
-			close := 0
+			/*open := 1
+			closingTags := 0*/
 			functionName := ""
-		Loop:
+			//Loop:
 			for _, value := range element.Attr {
 				//fmt.Printf("Att: %v ==> value: %v\n", value.Name.Local, value.Value)
 				parentTag = parentTag + " " + value.Name.Local + "=\"" + value.Value + "\""
 				if value.Name.Local == "data-lift" {
-					functionName = value.Value
-
-					for {
-						tok, err := decoder.Token()
-						if err != nil {
-							return err.Error()
-						}
-						switch innerTok := tok.(type) {
-						case xml.StartElement:
-							if snipetHTML == "" {
-								snipetHTML = parentTag + ">" //we found first inner node, so close the parent
-							}
-
-							snipetHTML = snipetHTML + "<" + innerTok.Name.Local
-							for _, attr := range innerTok.Attr {
-								snipetHTML = snipetHTML + " " + attr.Name.Local + "=\"" + attr.Value + "\""
-							}
-							snipetHTML = snipetHTML + ">"
-							open++
-						case xml.CharData:
-							snipetHTML = snipetHTML + string(innerTok)
-
-						case xml.EndElement:
-							snipetHTML = snipetHTML + "</" + innerTok.Name.Local + ">"
-							close++
-							if open == close { //do we have our matching closing tag? //This fails with autoclose tags I think
-								rawHTML := snipetHTML
-								completeHTML = completeHTML + ChangeName(rawHTML) //hard coded for now
-								snipetHTML = ""
-								parentTag = ""
-								break Loop
-							}
-						}
-						fmt.Printf(" ==>> snipetHTML  %v\n", snipetHTML)
-					}
+					_, res := processSnippet(value, decoder, parentTag, completeHTML)
+					parentTag = ""
+					completeHTML = completeHTML + res
 
 				}
 			}
-			/*if snipetHTML != "" {
-				rawHTML := snipetHTML
+			/*if snippetHTML != "" {
+				rawHTML := snippetHTML
 				completeHTML = completeHTML + ChangeName(rawHTML) //hard coded for now
 			}
 
@@ -120,6 +88,52 @@ func MarshallElem(in string) string {
 
 	}
 	return completeHTML
+}
+
+func processSnippet(value xml.Attr, decoder *xml.Decoder, parentTag, completeHTML string) (error, string) {
+	//functionName := value.Value
+
+	snippetHTML := ""
+	open := 1
+	closingTags := 0
+
+	for {
+		tok, err := decoder.Token()
+		if err != nil {
+			return err, ""
+		}
+		switch innerTok := tok.(type) {
+		case xml.StartElement:
+			if snippetHTML == "" {
+				snippetHTML = parentTag + ">" //we found first inner node, so close the parent
+			}
+
+			snippetHTML = snippetHTML + "<" + innerTok.Name.Local
+			for _, attr := range innerTok.Attr {
+				snippetHTML = snippetHTML + " " + attr.Name.Local + "=\"" + attr.Value + "\""
+			}
+			snippetHTML = snippetHTML + ">"
+			open++
+		case xml.CharData:
+			snippetHTML = snippetHTML + string(innerTok)
+
+		case xml.EndElement:
+			snippetHTML = snippetHTML + "</" + innerTok.Name.Local + ">"
+			closingTags++
+			if open == closingTags { //do we have our matching closing tag? //This fails with autoclose tags I think
+				rawHTML := snippetHTML
+				completeHTML = completeHTML + ChangeName(rawHTML) //hard coded for now
+				snippetHTML = ""
+				parentTag = ""
+				//fmt.Println("1")
+				return nil, ChangeName(rawHTML)
+				//break
+			}
+		}
+		fmt.Printf(" ==>> snippetHTML  %v\n", snippetHTML)
+	}
+	//fmt.Printf(" \n\n\n\n==========>> End  \n")
+	//return nil
 }
 
 func ChangeTime(html string) string {
