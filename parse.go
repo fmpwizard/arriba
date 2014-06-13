@@ -26,8 +26,6 @@ func MarshallElem(in string) string {
 	completeHTML := ""
 	parentTag := ""
 	snipetHTML := ""
-	//node := Elem{}
-	//err := xml.Unmarshal([]byte(in), &node)
 
 	decoder := xml.NewDecoder(bytes.NewBufferString(in))
 
@@ -44,15 +42,15 @@ func MarshallElem(in string) string {
 			} else {
 				completeHTML = "<" + element.Name.Local
 			}
-			//parentTag = "<2" + element.Name.Local
-
 			open := 1
 			close := 0
+			functionName := ""
 		Loop:
 			for _, value := range element.Attr {
 				//fmt.Printf("Att: %v ==> value: %v\n", value.Name.Local, value.Value)
 				parentTag = parentTag + " " + value.Name.Local + "=\"" + value.Value + "\""
 				if value.Name.Local == "data-lift" {
+					functionName = value.Value
 
 					for {
 						tok, err := decoder.Token()
@@ -78,9 +76,6 @@ func MarshallElem(in string) string {
 							snipetHTML = snipetHTML + "</" + innerTok.Name.Local + ">"
 							close++
 							if open == close { //do we have our matching closing tag? //This fails with autoclose tags I think
-								fmt.Printf("End ==>> %v, %v\n", open, close)
-								//return snipetHTML
-								completeHTML = completeHTML + snipetHTML
 								break Loop
 							}
 						}
@@ -89,6 +84,10 @@ func MarshallElem(in string) string {
 
 				}
 			}
+			if snipetHTML != "" {
+				rawHTML := snipetHTML
+				completeHTML = completeHTML + ChangeName(rawHTML) //hard coded for now
+			}
 
 			fmt.Printf("Start: %v\n", element.Name.Local)
 			if snipetHTML == "" {
@@ -96,6 +95,7 @@ func MarshallElem(in string) string {
 			}
 
 			fmt.Printf("completeHTML: %v\n", completeHTML)
+			fmt.Printf("functionName: %v\n", functionName)
 		case xml.CharData:
 			fmt.Printf("\n\nCharData: %+v\n", string(element))
 		case xml.EndElement:
