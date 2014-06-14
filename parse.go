@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"strings"
-	"time"
 )
 
 type HTMLTransform func(string) string
@@ -19,12 +18,14 @@ type Elem struct {
 }
 
 var funcMap = make(map[string]HTMLTransform)
+var ch = make(chan string)
 
 func MarshallElem(in string) string {
-	funcMap["ChangeTime"] = ChangeTime
+	fmt.Println("\n\n\n\n\n\n\n\n")
+
+	go readChan(ch)
 	funcMap["ChangeName"] = ChangeName
 	completeHTML := ""
-	parentTag := ""
 
 	decoder := xml.NewDecoder(bytes.NewBufferString(in))
 
@@ -43,12 +44,9 @@ func MarshallElem(in string) string {
 			}
 			functionName := ""
 			for _, value := range element.Attr {
-				//parentTag = parentTag + " " + value.Name.Local + "=\"" + value.Value + "\""
-				//if value.Name.Local == "data-lift" {
-				_, res := processSnippet(value, decoder, parentTag)
-				//	parentTag = ""
-				//	fmt.Println("1111 " + res)
+				_, res := processSnippet(value, decoder, element.Name.Local)
 				completeHTML = completeHTML + res
+				//fmt.Printf("res =========>: %v\n", res)
 
 				//}
 			}
@@ -79,57 +77,84 @@ func MarshallElem(in string) string {
 }
 
 func processSnippet(value xml.Attr, decoder *xml.Decoder, parentTag string) (error, string) {
+
 	//functionName := value.Value
 
 	snippetHTML := ""
 	open := 1
 	closingTags := 0
 
-	parentTag = parentTag + " " + value.Name.Local + "=\"" + value.Value + "\""
+	//parentTag = "<" + parentTag + " " + value.Name.Local + "=\"" + value.Value + "\""
+	parentTag = " " + value.Name.Local + "=\"" + value.Value + "\""
 	if value.Name.Local == "data-lift" {
-		//_, res := processSnippet(value, decoder, parentTag)
-
 		for {
 			tok, err := decoder.Token()
 			if err != nil {
-				return err, ""
+				//fmt.Println("------------------------ " + err.Error())
+				close(ch)
+				return err, snippetHTML
 			}
 			switch innerTok := tok.(type) {
 			case xml.StartElement:
 				if snippetHTML == "" {
+					//fmt.Printf("========== parentTag %v\n", parentTag)
 					snippetHTML = parentTag + ">" //we found first inner node, so close the parent
 				}
 
 				snippetHTML = snippetHTML + "<" + innerTok.Name.Local
+				//fmt.Println("1")
 				for _, attr := range innerTok.Attr {
 					snippetHTML = snippetHTML + " " + attr.Name.Local + "=\"" + attr.Value + "\""
+					ch <- snippetHTML
+					_, super := processSnippet(attr, decoder, innerTok.Name.Local)
+					//fmt.Printf("snippetHTML > super %v>%v\n", snippetHTML, super)
+					snippetHTML = snippetHTML + ">" + super
+					ch <- snippetHTML
 				}
-				snippetHTML = snippetHTML + ">"
+				//fmt.Printf("1 snippetHTML is %v\n", snippetHTML)
+				//snippetHTML = snippetHTML + ">============"
+				//fmt.Println("2")
 				open++
 			case xml.CharData:
 				snippetHTML = snippetHTML + string(innerTok)
-
 			case xml.EndElement:
 				snippetHTML = snippetHTML + "</" + innerTok.Name.Local + ">"
+				//fmt.Printf(" ==>> snippetHTML  %v\n", snippetHTML)
 				closingTags++
+				//fmt.Printf("Open: %v, closing tag: %v\n", open, closingTags)
 				if open == closingTags { //do we have our matching closing tag? //This fails with autoclose tags I think
+					//fmt.Printf("2 snippetHTML is %v\n", snippetHTML)
+					//fmt.Printf("3 %v\n", snippetHTML)
+					//fmt.Printf("33 %v\n", ChangeName(snippetHTML))
+					ch <- snippetHTML
 					return nil, ChangeName(snippetHTML)
 				}
 			}
-			fmt.Printf(" ==>> snippetHTML  %v\n", snippetHTML)
+			//fmt.Printf(" ==>> snippetHTML  %v\n", snippetHTML)
 		}
-		parentTag = ""
-		//fmt.Println("1111 " + res)
-		//completeHTML = completeHTML + res
 
 	}
 	return nil, ""
 }
 
-func ChangeTime(html string) string {
-	return strings.Replace(html, "Time goes here", time.Now().Format("2006-01-02T15:04:05.999999999Z07:00"), 1)
-}
-
 func ChangeName(html string) string {
 	return strings.Replace(html, "Diego", "Gabriel", 1)
+}
+
+func readChan(ch chan string) {
+	var buffer string
+	for {
+		select {
+		case data, ok := <-ch:
+			if ok == true {
+				fmt.Printf("got: %v\n", data)
+				buffer = data
+				//buffer =  buffer + data
+			} else {
+				fmt.Printf("sending: %v\n", buffer)
+				return
+			}
+		}
+	}
+
 }
