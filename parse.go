@@ -83,16 +83,8 @@ func processSnippet(value xml.Attr, decoder *xml.Decoder) (error, string) {
 	open := 1
 	closingTags := 0
 
-	//parentTag = "<" + parentTag + " " + value.Name.Local + "=\"" + value.Value + "\""
-	//parentTag = parentTag + " - " + value.Name.Local + "=\"" + value.Value + "\""
-	parentTag := ""
-	if value.Name.Local != "data-lift" {
-		parentTag = " " + value.Name.Local + "=\"" + value.Value + "\""
-	}
 	if value.Name.Local == "data-lift" {
-		//fmt.Printf("111\n")
 		for {
-			fmt.Println("parentTag " + parentTag)
 			tok, err := decoder.Token()
 			if err != nil {
 				//We are done processing tokens, let's end.
@@ -101,27 +93,16 @@ func processSnippet(value xml.Attr, decoder *xml.Decoder) (error, string) {
 			}
 			switch innerTok := tok.(type) {
 			case xml.StartElement:
-				if snippetHTML == "" && parentTag != "" && !strings.HasSuffix(parentTag, ">") {
-					//if snippetHTML == "" {
-
-					snippetHTML = parentTag + "/>" //we found first inner node, so close the parent
-				} else if snippetHTML == "" && parentTag == "" && !strings.HasSuffix(parentTag, ">") {
-
-					snippetHTML = parentTag + "ss>"
+				if snippetHTML == "" && !strings.HasSuffix(snippetHTML, ">") {
+					snippetHTML = snippetHTML + ">" //we found first inner node, so close the parent
 				}
-
 				snippetHTML = snippetHTML + "<" + innerTok.Name.Local
-				fmt.Printf("2========== snippetHTML %v\n", snippetHTML)
-				//fmt.Println("1")
 				for _, attr := range innerTok.Attr {
 					if attr.Name.Local != "data-lift" {
 						snippetHTML = snippetHTML + " " + attr.Name.Local + "=\"" + attr.Value + "\""
 					}
-
 					ch <- snippetHTML
 					_, super := processSnippet(attr, decoder)
-					//_, super := processSnippet(attr, decoder, innerTok.Name.Local)
-					//fmt.Printf("snippetHTML > super %v>%v\n", snippetHTML, super)
 					if strings.HasSuffix(snippetHTML, ">") {
 
 						snippetHTML = snippetHTML + super
@@ -131,26 +112,17 @@ func processSnippet(value xml.Attr, decoder *xml.Decoder) (error, string) {
 					}
 					ch <- snippetHTML
 				}
-				//fmt.Printf("1 snippetHTML is %v\n", snippetHTML)
-				//snippetHTML = snippetHTML + ">============"
-				//fmt.Println("2")
 				open++
 			case xml.CharData:
 				snippetHTML = snippetHTML + string(innerTok)
 			case xml.EndElement:
 				snippetHTML = snippetHTML + "</" + innerTok.Name.Local + ">"
-				//fmt.Printf(" ==>> snippetHTML  %v\n", snippetHTML)
 				closingTags++
-				//fmt.Printf("Open: %v, closing tag: %v\n", open, closingTags)
 				if open == closingTags { //do we have our matching closing tag? //This fails with autoclose tags I think
-					//fmt.Printf("2 snippetHTML is %v\n", snippetHTML)
-					//fmt.Printf("3 %v\n", snippetHTML)
-					//fmt.Printf("33 %v\n", ChangeName(snippetHTML))
 					ch <- snippetHTML
 					return nil, ChangeName(snippetHTML)
 				}
 			}
-			//fmt.Printf(" ==>> snippetHTML  %v\n", snippetHTML)
 		}
 
 	}
