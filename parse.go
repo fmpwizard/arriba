@@ -3,20 +3,34 @@ package arriba
 import (
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"strings"
+	"sync"
 )
 
 type HTMLTransform func(string) string
 
-var funcMap = make(map[string]HTMLTransform)
-var ch = make(chan string)
+type snippetAndNode struct {
+	FunctionName string
+	HTML         string
+}
+
+var functionMap = struct {
+	sync.RWMutex
+	m map[string]HTMLTransform
+}{m: make(map[string]HTMLTransform)}
+
+var ch = make(chan snippetAndNode)
 
 func MarshallElem(in string) string {
 	fmt.Println("\n\n\n\n\n")
-
+	functionMap.Lock()
+	functionMap.m["ChangeName"] = ChangeName
+	functionMap.m["ChangeLastName"] = ChangeLastName
+	functionMap.Unlock()
 	go readChan(ch)
-	funcMap["ChangeName"] = ChangeName
+
 	completeHTML := ""
 
 	decoder := xml.NewDecoder(bytes.NewBufferString(in))
@@ -33,7 +47,10 @@ func MarshallElem(in string) string {
 			}
 			functionName := ""
 			for _, value := range element.Attr {
-				_, res := processSnippet(value, decoder, element.Name.Local)
+				err, res := processSnippet(value, decoder, element.Name.Local)
+				if err != nil {
+					return err.Error()
+				}
 				completeHTML = completeHTML + res
 			}
 			if !strings.HasSuffix(completeHTML, ">") {
@@ -62,9 +79,6 @@ func MarshallElem(in string) string {
 }
 
 func processSnippet(value xml.Attr, decoder *xml.Decoder, parentTag string) (error, string) {
-
-	//functionName := value.Value
-
 	snippetHTML := ""
 	if parentTag != "" {
 		snippetHTML = "<" + parentTag + ">"
@@ -87,14 +101,15 @@ func processSnippet(value xml.Attr, decoder *xml.Decoder, parentTag string) (err
 					if attr.Name.Local != "data-lift" {
 						snippetHTML = snippetHTML + " " + attr.Name.Local + "=\"" + attr.Value + "\""
 					}
-					ch <- snippetHTML
-					_, super := processSnippet(attr, decoder, "")
+					err, super := processSnippet(attr, decoder, "")
+					if err != nil {
+						return err, ""
+					}
 					if strings.HasSuffix(snippetHTML, ">") {
 						snippetHTML = snippetHTML + super
 					} else {
 						snippetHTML = snippetHTML + ">" + super
 					}
-					ch <- snippetHTML
 				}
 				open++
 			case xml.CharData:
@@ -103,8 +118,16 @@ func processSnippet(value xml.Attr, decoder *xml.Decoder, parentTag string) (err
 				snippetHTML = snippetHTML + "</" + innerTok.Name.Local + ">"
 				closingTags++
 				if open == closingTags { //do we have our matching closing tag? //This fails with autoclose tags I think
-					ch <- snippetHTML
-					return nil, ChangeName(snippetHTML)
+					ch <- snippetAndNode{value.Value, snippetHTML}
+					functionMap.RLock()
+					f, ok := functionMap.m[value.Value]
+					functionMap.RUnlock()
+					if ok {
+						return nil, f(snippetHTML)
+					} else {
+						return errors.New("Did not find function " + value.Value), ""
+					}
+
 				}
 			}
 		}
@@ -117,18 +140,25 @@ func ChangeName(html string) string {
 	return strings.Replace(html, "Diego", "Gabriel", 1)
 }
 
-func readChan(ch chan string) {
-	var buffer string
+func ChangeLastName(html string) string {
+	return strings.Replace(html, "Medina", "Bauman", 1)
+}
+
+//readChan receives the snippet name and the html we will work on.
+//So far is an alternative way to process snippets. We wil lcompare speeds once
+//we are further along
+func readChan(ch chan snippetAndNode) {
+	var buffer snippetAndNode
 	for {
 		select {
 		case data, ok := <-ch:
-			if ok == true {
-				fmt.Printf("got: %v\n", data)
+			if ok == true { //if is false when you close the channel
 				buffer = data
-				//buffer =  buffer + data
-			} else {
-				fmt.Printf("sending: %v\n", buffer)
-				return
+				fmt.Printf("Found snippet: %v\n", buffer.FunctionName)
+				//functionMap.RLock()
+				//f := functionMap.m[buffer.FunctionName]
+				//functionMap.RUnlock()
+				//fmt.Printf("result is : %v\n", f(buffer.HTML))
 			}
 		}
 	}
