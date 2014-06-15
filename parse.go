@@ -9,14 +9,6 @@ import (
 
 type HTMLTransform func(string) string
 
-type Elem struct {
-	XMLName  xml.Name
-	Comment  xml.Comment
-	Attr     xml.Attr
-	InnerXML string `xml:",innerxml"`
-	Kids     []Elem `xml:",any"`
-}
-
 var funcMap = make(map[string]HTMLTransform)
 var ch = make(chan string)
 
