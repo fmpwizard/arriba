@@ -32,6 +32,13 @@ func TestMarshallElemNestedSnippet(t *testing.T) {
 	}
 }
 
+func TestMarshallElemSnippetNotFound(t *testing.T) {
+	res := MarshallElem(html5)
+	if res != html5Expected {
+		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html5Expected, res)
+	}
+}
+
 const html1 = (`<html><head></head><body><div data-lift="ChangeName"><p name="name">Diego</p><p data-lift="ChangeLastName">Medina</p></div></body></html>`)
 const html1Expected = (`<html><head></head><body><div><p name="name">Gabriel</p><p>Bauman</p></div></body></html>`)
 
@@ -43,3 +50,6 @@ const html3Expected = (`<html><head></head><body><div><p name="name">Gabriel</p>
 
 const html4 = (`<html><head></head><body><div data-lift="ChangeName"><p name="name">Diego</p><p class="pretty-last-name">Medina</p></div><div data-lift="ChangeName"><p name="name">Diego1</p><p class="pretty-last-name">Medina</p></div></body></html>`)
 const html4Expected = (`<html><head></head><body><div><p name="name">Gabriel</p><p class="pretty-last-name">Medina</p></div><div><p name="name">Gabriel1</p><p class="pretty-last-name">Medina</p></div></body></html>`)
+
+const html5 = (`<html><head></head><body><div data-lift="DoesNotExist"><p name="name">Diego</p></div></body></html>`)
+const html5Expected = (`Did not find function DoesNotExist`)
