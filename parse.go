@@ -21,7 +21,7 @@ var funcMap = make(map[string]HTMLTransform)
 var ch = make(chan string)
 
 func MarshallElem(in string) string {
-	fmt.Println("\n\n\n\n\n\n\n\n")
+	fmt.Println("\n\n\n\n\n")
 
 	go readChan(ch)
 	funcMap["ChangeName"] = ChangeName
@@ -44,9 +44,8 @@ func MarshallElem(in string) string {
 			}
 			functionName := ""
 			for _, value := range element.Attr {
-				_, res := processSnippet(value, decoder, element.Name.Local)
+				_, res := processSnippet(value, decoder)
 				completeHTML = completeHTML + res
-				//fmt.Printf("res =========>: %v\n", res)
 
 				//}
 			}
@@ -76,7 +75,7 @@ func MarshallElem(in string) string {
 	return completeHTML
 }
 
-func processSnippet(value xml.Attr, decoder *xml.Decoder, parentTag string) (error, string) {
+func processSnippet(value xml.Attr, decoder *xml.Decoder) (error, string) {
 
 	//functionName := value.Value
 
@@ -85,30 +84,51 @@ func processSnippet(value xml.Attr, decoder *xml.Decoder, parentTag string) (err
 	closingTags := 0
 
 	//parentTag = "<" + parentTag + " " + value.Name.Local + "=\"" + value.Value + "\""
-	parentTag = " " + value.Name.Local + "=\"" + value.Value + "\""
+	//parentTag = parentTag + " - " + value.Name.Local + "=\"" + value.Value + "\""
+	parentTag := ""
+	if value.Name.Local != "data-lift" {
+		parentTag = " " + value.Name.Local + "=\"" + value.Value + "\""
+	}
 	if value.Name.Local == "data-lift" {
+		//fmt.Printf("111\n")
 		for {
+			fmt.Println("parentTag " + parentTag)
 			tok, err := decoder.Token()
 			if err != nil {
-				//fmt.Println("------------------------ " + err.Error())
+				//We are done processing tokens, let's end.
 				close(ch)
 				return err, snippetHTML
 			}
 			switch innerTok := tok.(type) {
 			case xml.StartElement:
-				if snippetHTML == "" {
-					//fmt.Printf("========== parentTag %v\n", parentTag)
-					snippetHTML = parentTag + ">" //we found first inner node, so close the parent
+				if snippetHTML == "" && parentTag != "" && !strings.HasSuffix(parentTag, ">") {
+					//if snippetHTML == "" {
+
+					snippetHTML = parentTag + "/>" //we found first inner node, so close the parent
+				} else if snippetHTML == "" && parentTag == "" && !strings.HasSuffix(parentTag, ">") {
+
+					snippetHTML = parentTag + "ss>"
 				}
 
 				snippetHTML = snippetHTML + "<" + innerTok.Name.Local
+				fmt.Printf("2========== snippetHTML %v\n", snippetHTML)
 				//fmt.Println("1")
 				for _, attr := range innerTok.Attr {
-					snippetHTML = snippetHTML + " " + attr.Name.Local + "=\"" + attr.Value + "\""
+					if attr.Name.Local != "data-lift" {
+						snippetHTML = snippetHTML + " " + attr.Name.Local + "=\"" + attr.Value + "\""
+					}
+
 					ch <- snippetHTML
-					_, super := processSnippet(attr, decoder, innerTok.Name.Local)
+					_, super := processSnippet(attr, decoder)
+					//_, super := processSnippet(attr, decoder, innerTok.Name.Local)
 					//fmt.Printf("snippetHTML > super %v>%v\n", snippetHTML, super)
-					snippetHTML = snippetHTML + ">" + super
+					if strings.HasSuffix(snippetHTML, ">") {
+
+						snippetHTML = snippetHTML + super
+					} else {
+						fmt.Println("1 " + super)
+						snippetHTML = snippetHTML + ">" + super
+					}
 					ch <- snippetHTML
 				}
 				//fmt.Printf("1 snippetHTML is %v\n", snippetHTML)
