@@ -24,12 +24,12 @@ var functionMap = struct {
 var ch = make(chan snippetAndNode)
 
 func MarshallElem(in string) string {
-	fmt.Println("\n\n\n\n\n")
+	//fmt.Println("\n\n\n\n\n1")
 	functionMap.Lock()
 	functionMap.m["ChangeName"] = ChangeName
 	functionMap.m["ChangeLastName"] = ChangeLastName
 	functionMap.Unlock()
-	go readChan(ch)
+	//go readChan(ch)
 
 	completeHTML := ""
 
@@ -118,7 +118,7 @@ func processSnippet(value xml.Attr, decoder *xml.Decoder, parentTag string) (err
 				snippetHTML = snippetHTML + "</" + innerTok.Name.Local + ">"
 				closingTags++
 				if open == closingTags { //do we have our matching closing tag? //This fails with autoclose tags I think
-					ch <- snippetAndNode{value.Value, snippetHTML}
+					//ch <- snippetAndNode{value.Value, snippetHTML}
 					functionMap.RLock()
 					f, ok := functionMap.m[value.Value]
 					functionMap.RUnlock()
@@ -147,7 +147,7 @@ func ChangeLastName(html string) string {
 //readChan receives the snippet name and the html we will work on.
 //So far is an alternative way to process snippets. We wil lcompare speeds once
 //we are further along
-func readChan(ch chan snippetAndNode) {
+/*func readChan(ch chan snippetAndNode) {
 	var buffer snippetAndNode
 	for {
 		select {
@@ -164,3 +164,4 @@ func readChan(ch chan snippetAndNode) {
 	}
 
 }
+*/
