@@ -36,23 +36,17 @@ func MarshallElem(in string) string {
 		}
 		switch element := token.(type) {
 		case xml.StartElement:
-
-			if completeHTML != "" {
+			if len(element.Attr) == 0 {
 				completeHTML = completeHTML + "<" + element.Name.Local
-			} else {
-				completeHTML = "<" + element.Name.Local
 			}
 			functionName := ""
 			for _, value := range element.Attr {
-				_, res := processSnippet(value, decoder)
+				_, res := processSnippet(value, decoder, element.Name.Local)
 				completeHTML = completeHTML + res
-
-				//}
 			}
 			if !strings.HasSuffix(completeHTML, ">") {
 				completeHTML = completeHTML + ">"
 			}
-
 			if functionName != "" {
 				fmt.Printf("functionName: %v\n", functionName)
 			}
@@ -75,11 +69,14 @@ func MarshallElem(in string) string {
 	return completeHTML
 }
 
-func processSnippet(value xml.Attr, decoder *xml.Decoder) (error, string) {
+func processSnippet(value xml.Attr, decoder *xml.Decoder, parentTag string) (error, string) {
 
 	//functionName := value.Value
 
 	snippetHTML := ""
+	if parentTag != "" {
+		snippetHTML = "<" + parentTag + ">"
+	}
 	open := 1
 	closingTags := 0
 
@@ -93,21 +90,16 @@ func processSnippet(value xml.Attr, decoder *xml.Decoder) (error, string) {
 			}
 			switch innerTok := tok.(type) {
 			case xml.StartElement:
-				if snippetHTML == "" && !strings.HasSuffix(snippetHTML, ">") {
-					snippetHTML = snippetHTML + ">" //we found first inner node, so close the parent
-				}
 				snippetHTML = snippetHTML + "<" + innerTok.Name.Local
 				for _, attr := range innerTok.Attr {
 					if attr.Name.Local != "data-lift" {
 						snippetHTML = snippetHTML + " " + attr.Name.Local + "=\"" + attr.Value + "\""
 					}
 					ch <- snippetHTML
-					_, super := processSnippet(attr, decoder)
+					_, super := processSnippet(attr, decoder, "")
 					if strings.HasSuffix(snippetHTML, ">") {
-
 						snippetHTML = snippetHTML + super
 					} else {
-						fmt.Println("1 " + super)
 						snippetHTML = snippetHTML + ">" + super
 					}
 					ch <- snippetHTML
