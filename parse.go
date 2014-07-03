@@ -3,6 +3,7 @@ package arriba
 import (
 	"encoding/xml"
 	"fmt"
+	"bytes"
 )
 
 //Node holds the function name taken from the data-lift attribute and
@@ -66,4 +67,82 @@ func loop(v Result) map[string]string {
 		push2Stack(node.Functions, stack)
 	}
 	return functionMap
+}
+
+
+
+const html1 = (`<html><body><div data-lift="ChangeName"><p name="name">Diego</p><p data-lift="ChangeLastName">Medina</p></div></body></html>`)
+
+func Children(tokenArray []xml.Token, initialIndex int) ([]xml.Token, xml.Token) {
+	openTags := 1
+	closedTags := 0
+	stack := new(Stack)
+	var closingTag = new(xml.Token)
+	for i:= initialIndex; i < len(tokenArray); i++ {
+		tok := tokenArray[i]
+		switch innerTok := tok.(type) {
+		case xml.EndElement:
+			closedTags++
+			if openTags == closedTags {
+				closingTag = innerTok
+				break
+			}
+			stack.Push(innerTok)
+
+		case xml.StartElement:
+			openTags++
+			stack.Push(innerTok)
+
+		case xml.CharData:
+			stack.Push(innerTok)
+		}
+	}
+	var ret = make([]xml.Token, stack.Size())
+	var i = stack.Size()
+	for i > 0 {
+		ret[i - 1] = stack.Pop()
+		i--
+	}
+	return ret, closingTag
+}
+
+func toTokenArray(decoder *xml.Decoder) []xml.Token {
+	stack := new(Stack)
+	for {
+		tok, err := decoder.Token()
+		if err != nil {
+			//We are done processing tokens, let's end.
+			break
+		}
+		stack.Push(tok)
+	}
+	var array = make([]xml.Token, stack.Size())
+	var i = stack.Size()
+	for i > 0 {
+		array[i - 1] = stack.Pop()
+		i--
+	}
+	return array
+}
+
+func Princ() {
+
+	decoder := xml.NewDecoder(bytes.NewBufferString(html1))
+
+	var tokenArray = toTokenArray(decoder)
+
+	fmt.Println(tokenArray)
+
+	var children = Children(tokenArray, 1)
+
+
+	fmt.Println(children)
+//
+//	token2, _ := decoder.Token()
+//
+//	fmt.Println(Children(&token2))
+
+
+
+
 }
