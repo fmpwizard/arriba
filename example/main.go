@@ -112,6 +112,8 @@ const html1 = (`<html><body><div data-lift="ChangeName"><p name="name">Diego</p>
 
 const html2 = (`<html><body><div data-lift="ChangeName"><p name="name1">xxxxxxx</p></div><p data-lift="ChangeLastName">zzzzzzzzzzzz</p></body></html>`)
 
+const html3 = (`<html><body><div data-lift="ChangeName"><p name="name2">xxxxxxx</p></div><p data-lift="ChangeLastName">zzzzzzzzzzzz</p></body></html>`)
+
 func Children(tokenArray []xml.Token, initialIndex int) ([]xml.Token, int) {
 	openTags := 1
 	closedTags := 0
@@ -127,7 +129,7 @@ func Children(tokenArray []xml.Token, initialIndex int) ([]xml.Token, int) {
 			closedTags++
 			if openTags == closedTags {
 				closingTag = i
-				fmt.Print("hizo break en")
+				fmt.Print("hizo break en ")
 				fmt.Println(closingTag)
 				break
 			}
@@ -138,7 +140,7 @@ func Children(tokenArray []xml.Token, initialIndex int) ([]xml.Token, int) {
 			stack.Push(innerTok)
 
 		case xml.CharData:
-			stack.Push(innerTok)
+			stack.Push(xml.CopyToken(innerTok))
 		}
 	}
 	var ret = make([]xml.Token, stack.Size())
@@ -153,21 +155,38 @@ func Children(tokenArray []xml.Token, initialIndex int) ([]xml.Token, int) {
 }
 
 func toTokenArray(decoder *xml.Decoder) []xml.Token {
-	stack := new(Stack)
+	var i = 0
+	var array = make([]xml.Token, 100)
 	for {
 		tok, err := decoder.Token()
 		if err != nil {
 			//We are done processing tokens, let's end.
 			break
 		}
-		stack.Push(tok)
+
+		switch innerTok := tok.(type) {
+		case xml.StartElement:
+			array[i] = innerTok
+		case xml.CharData:
+			array[i] = xml.CopyToken(innerTok)
+		case xml.EndElement:
+			array[i] = innerTok
+		}
+
+		fmt.Print("--> ")
+		fmt.Println(tok)
+		//array[i] = &tok
+		i++
 	}
-	var array = make([]xml.Token, stack.Size())
-	var i = stack.Size()
-	for i > 0 {
-		array[i - 1] = stack.Pop()
-		i--
-	}
+//	}
+//	var i = stack.Size()
+//	for i > 0 {
+//		item := stack.Pop()
+//		array[i - 1] = item.(xml.Token)
+//		fmt.Print("-> ")
+//		fmt.Println(array[i - 1])
+//		i--
+//	}
 	return array
 }
 
@@ -209,9 +228,9 @@ func processTag(token xml.Token, visited bool, resultStack *Stack) string {
 
 func Princ() {
 
-	decoder := xml.NewDecoder(bytes.NewBufferString(html2))
+	decoder := xml.NewDecoder(bytes.NewBufferString(html3))
 
-	decoder2 := xml.NewDecoder(bytes.NewBufferString(html2))
+	decoder2 := xml.NewDecoder(bytes.NewBufferString(html3))
 	fmt.Println("Array")
 	var tokenArrayp = toTokenArray(decoder2)
 	for _, item := range tokenArrayp {
@@ -224,7 +243,7 @@ func Princ() {
 			fmt.Println(innerTok)
 		}
 	}
-
+	fmt.Println("---- end Array ----")
 	var tokenArray = toTokenArray(decoder)
 
 	resultStack := new(Stack)
