@@ -105,19 +105,22 @@ func (stack *Stack) Size() int {
 	return stack.size
 }
 
-
-
-
-const html1 = (`<html><body><div data-lift="ChangeName"><p name="name">Diego</p><p data-lift="ChangeLastName">Medina</p></div></body></html>`)
-
-const html2 = (`<html><body><div data-lift="ChangeName"><p name="name1">xxxxxxx</p></div><p data-lift="ChangeLastName">zzzzzzzzzzzz</p></body></html>`)
-
 const html3 = (`<html><body><div data-lift="ChangeName"><p name="name2">xxxxxxx</p></div><p data-lift="ChangeLastName">zzzzzzzzzzzz</p></body></html>`)
-
-func Children(tokenArray []xml.Token, initialIndex int) ([]xml.Token, int) {
+/* *
+<html>
+	<body>
+		<div data-lift="ChangeName">
+			<p name="name2">xxxxxxx</p>
+		</div>
+		<p data-lift="ChangeLastName">zzzzzzzzzzzz</p>
+	</body>
+</html>
+ */
+func Children(tokenArray []xml.Token, initialIndex int) ([]xml.Token, int, *Stack) {
 	openTags := 1
 	closedTags := 0
 	stack := new(Stack)
+	childStackIndex := new(Stack)
 	var closingTag int
 	for i:= initialIndex; i < len(tokenArray); i++ {
 		if openTags == closedTags {
@@ -129,17 +132,21 @@ func Children(tokenArray []xml.Token, initialIndex int) ([]xml.Token, int) {
 			closedTags++
 			if openTags == closedTags {
 				closingTag = i
-				fmt.Print("hizo break en ")
-				fmt.Println(closingTag)
 				break
 			}
 			stack.Push(innerTok)
 
 		case xml.StartElement:
+			if (openTags - closedTags) == 1 {
+				fmt.Print("Children detected ")
+				fmt.Println(i)
+				childStackIndex.Push(i)
+			}
 			openTags++
 			stack.Push(innerTok)
 
 		case xml.CharData:
+			fmt.Println("Child chardata detected -+++-+-+-")
 			stack.Push(xml.CopyToken(innerTok))
 		}
 	}
@@ -147,16 +154,14 @@ func Children(tokenArray []xml.Token, initialIndex int) ([]xml.Token, int) {
 	var i = stack.Size()
 	for i > 0 {
 		ret[i - 1] = stack.Pop()
-		fmt.Print("metido al stack")
-		fmt.Println(ret[i - 1])
 		i--
 	}
-	return ret, closingTag
+	return ret, closingTag, childStackIndex
 }
 
 func toTokenArray(decoder *xml.Decoder) []xml.Token {
 	var i = 0
-	var array = make([]xml.Token, 100)
+	var array = make([]xml.Token, 100) // todo FIX THIS
 	for {
 		tok, err := decoder.Token()
 		if err != nil {
@@ -175,28 +180,32 @@ func toTokenArray(decoder *xml.Decoder) []xml.Token {
 
 		fmt.Print("--> ")
 		fmt.Println(tok)
-		//array[i] = &tok
 		i++
 	}
-//	}
-//	var i = stack.Size()
-//	for i > 0 {
-//		item := stack.Pop()
-//		array[i - 1] = item.(xml.Token)
-//		fmt.Print("-> ")
-//		fmt.Println(array[i - 1])
-//		i--
-//	}
 	return array
 }
 
 type Stackednode struct {
 	NodePosition int
 	ClosePosition int
+	level int
 	Visited bool // this field could be removed and use the closeposition to check if it is -1
 }
 
-func processTag(token xml.Token, visited bool, resultStack *Stack) string {
+type StackedResult struct {
+	str string
+	level int
+}
+
+func StackedResultToString(stack *Stack) string {
+	var result = ""
+	for stack.Size() > 0 {
+		result = stack.Pop().(StackedResult).str + result
+	}
+	return result
+}
+
+func processTag(token xml.Token, visited bool, resultStack *Stack, level int) string {
 	stringTag := ""
 	switch innerTok := token.(type) {
 	case xml.StartElement:
@@ -207,13 +216,13 @@ func processTag(token xml.Token, visited bool, resultStack *Stack) string {
 			} else {
 				// call the function
 				childNodesStr := ""
-				if (visited && resultStack.Size() > 0) {
-					childNodesStr = resultStack.Pop().(string)
+				lvl := resultStack.Head().(StackedResult).level
+				if (visited && resultStack.Size() > 0 && lvl > level) {
+					childNodesStr = StackedResultToString(resultStack)
 				}
-				fmt.Println("child debug " + childNodesStr)
 				// get the function from the map
 				var funcResult = ChangeName(childNodesStr) // TODO get the function from the map
-				resultStack.Push(funcResult)
+				resultStack.Push(StackedResult{funcResult, lvl})
 			}
 		}
 		stringTag = stringTag + ">"
@@ -229,83 +238,59 @@ func processTag(token xml.Token, visited bool, resultStack *Stack) string {
 func Princ() {
 
 	decoder := xml.NewDecoder(bytes.NewBufferString(html3))
-
-	decoder2 := xml.NewDecoder(bytes.NewBufferString(html3))
-	fmt.Println("Array")
-	var tokenArrayp = toTokenArray(decoder2)
-	for _, item := range tokenArrayp {
-		switch innerTok := item.(type) {
-		case xml.StartElement:
-			fmt.Println(innerTok)
-		case xml.CharData:
-			fmt.Println(string(innerTok))
-		case xml.EndElement:
-			fmt.Println(innerTok)
-		}
-	}
-	fmt.Println("---- end Array ----")
 	var tokenArray = toTokenArray(decoder)
-
 	resultStack := new(Stack)
 	itStack := new(Stack)
 
-	itStack.Push(Stackednode{0, -1, false})
+	itStack.Push(Stackednode{0, -1, 0, false})
 	var currentNode Stackednode
 
 	for itStack.Size() > 0 {
 		currentNode = itStack.Pop().(Stackednode)
-//		fmt.Print("Visiting ")
-//		fmt.Print(itStack.Size())
+		fmt.Print("result stack")
+		fmt.Print(resultStack.Size())
 		switch innerTok := tokenArray[currentNode.NodePosition].(type) {
 		case xml.EndElement:
 			fmt.Println("")
 		case xml.CharData:
-			var processed = processTag(tokenArray[currentNode.NodePosition], currentNode.Visited, resultStack)
-//			processedChildren := ""
-//			if resultStack.Size() > 0 {
-//				processedChildren = resultStack.Pop().(string)
-//			}
-			resultStack.Push(processed)
+			var processed = processTag(tokenArray[currentNode.NodePosition], currentNode.Visited, resultStack, currentNode.level)
+			resultStack.Push(StackedResult{processed, currentNode.level })
 		default:
 			fmt.Println(innerTok)
 			if !currentNode.Visited {
-				var children, last = Children(tokenArray, currentNode.NodePosition + 1)
-				fmt.Println("children")
-				fmt.Println(children)
-				fmt.Println(last)
-				fmt.Println("--")
+				var children, last, childrenIndexes = Children(tokenArray, currentNode.NodePosition + 1)
 				currentNode.ClosePosition = last
 				currentNode.Visited = true
 				if len(children) > 0 {
 					itStack.Push(currentNode)
-					itStack.Push(Stackednode{currentNode.NodePosition + 1, -1, false})
+					for childrenIndexes.Size() > 0 {
+						index := childrenIndexes.Pop().(int)
+						fmt.Print("Adding ")
+						fmt.Println(tokenArray[index])
+						fmt.Print("Level ")
+						fmt.Println(currentNode.level)
+						itStack.Push(Stackednode{index, -1, currentNode.level + 1, false})
+					}
 				} else {
 					// traverse the attributes of the node and apply the function specified by data-lift attr
 					// save the string version of the node in result slice with the closing tag
-					var processed = processTag(tokenArray[currentNode.NodePosition], currentNode.Visited, resultStack)
-					resultStack.Push(processed + processTag(tokenArray[currentNode.ClosePosition], false, resultStack))
-					fmt.Println("Result stackv: " + resultStack.Head().(string))
+					var processed = processTag(tokenArray[currentNode.NodePosition], currentNode.Visited, resultStack, currentNode.level)
+					resultStack.Push(StackedResult{processed + processTag(tokenArray[currentNode.ClosePosition], false, resultStack, currentNode.level), currentNode.level})
+					fmt.Println("Result stackv: " + resultStack.Head().(StackedResult).str)
 				}
 			} else {
 				// traverse the attributes of the node and apply the function specified by data-lift attr
 				// save the string version of the node in result slice with the closing tag
-				var processed = processTag(tokenArray[currentNode.NodePosition], currentNode.Visited, resultStack)
+				var processed = processTag(tokenArray[currentNode.NodePosition], currentNode.Visited, resultStack, currentNode.level)
 				processedChildren := ""
-				if resultStack.Size() > 0 {
-					processedChildren = resultStack.Pop().(string)
+				if resultStack.Size() > 0 && resultStack.Head().(StackedResult).level > currentNode.level {
+					processedChildren = StackedResultToString(resultStack)
 				}
-				resultStack.Push(processed + processedChildren + processTag(tokenArray[currentNode.ClosePosition], false, resultStack))
-				fmt.Println("Result stack: " + resultStack.Head().(string))
+				resultStack.Push(StackedResult{processed + processedChildren + processTag(tokenArray[currentNode.ClosePosition], false, resultStack, currentNode.level), currentNode.level})
+				fmt.Print("Result stack/: ")
+				fmt.Println(resultStack.Head().(StackedResult))
 			}
 		}
-	}
-
-	//fmt.Println(tokenArray)
-
-	//var children, _ = Children(tokenArray, 1)
-
-	for resultStack.Size() > 0 {
-		fmt.Println(resultStack.Pop().(string))
 	}
 
 	/*
@@ -321,15 +306,6 @@ func Princ() {
 
 	return nodesStack.pop
 	*/
-
-	//fmt.Println(children)
-	//
-	//	token2, _ := decoder.Token()
-	//
-	//	fmt.Println(Children(&token2))
-
-
-
 }
 
 func ChangeName(html string) string {
