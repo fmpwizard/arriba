@@ -1,8 +1,16 @@
 package arriba
 
 import (
+	"strings"
 	"testing"
 )
+
+func init() {
+	FunctionMap.Lock()
+	FunctionMap.M["ChangeName"] = ChangeName
+	FunctionMap.M["ChangeLastName"] = ChangeLastName
+	FunctionMap.Unlock()
+}
 
 func TestMarshallElemDifferentSnippets(t *testing.T) {
 	res := MarshallElem(html1)
@@ -36,6 +44,13 @@ func TestMarshallElemSnippetNotFound(t *testing.T) {
 	res := MarshallElem(html5)
 	if res != html5Expected {
 		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html5Expected, res)
+	}
+}
+
+func TestMarshallUntouchedStrings(t *testing.T) {
+	res := MarshallElem(html6)
+	if res != html6Expected {
+		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html6Expected, res)
 	}
 }
 
@@ -90,11 +105,22 @@ const html1Expected = (`<html><head></head><body><div><p name="name">Gabriel</p>
 const html2 = (`<html><head></head><body><div data-lift="ChangeName"><p name="name">Diego</p><p class="pretty-last-name">Medina</p></div></body></html>`)
 const html2Expected = (`<html><head></head><body><div><p name="name">Gabriel</p><p class="pretty-last-name">Medina</p></div></body></html>`)
 
-const html3 = (`<html><head></head><body><div data-lift="ChangeName"><p name="name">Diego</p><div data-lift="ChangeName"><p name="name">Diego</p></div></div></body></html>`)
-const html3Expected = (`<html><head></head><body><div><p name="name">Gabriel</p><div><p name="name">Gabriel</p></div></div></body></html>`)
+const html3 = (`<html><head></head><body><div data-lift="ChangeName"><p name="name">Diego1</p><div data-lift="ChangeName"><p name="name">Diego</p></div></div></body></html>`)
+const html3Expected = (`<html><head></head><body><div><p name="name">Gabriel1</p><div><p name="name">Gabriel</p></div></div></body></html>`)
 
 const html4 = (`<html><head></head><body><div data-lift="ChangeName"><p name="name">Diego</p><p class="pretty-last-name">Medina</p></div><div data-lift="ChangeName"><p name="name">Diego1</p><p class="pretty-last-name">Medina</p></div></body></html>`)
 const html4Expected = (`<html><head></head><body><div><p name="name">Gabriel</p><p class="pretty-last-name">Medina</p></div><div><p name="name">Gabriel1</p><p class="pretty-last-name">Medina</p></div></body></html>`)
 
 const html5 = (`<html><head></head><body><div data-lift="DoesNotExist"><p name="name">Diego</p></div></body></html>`)
-const html5Expected = (`Did not find function DoesNotExist`)
+const html5Expected = (`Did not find function: 'DoesNotExist'`)
+
+const html6 = (`<html><head></head><body><div><p name="name">Diego</p></div></body></html>`)
+const html6Expected = (`<html><head></head><body><div><p name="name">Diego</p></div></body></html>`)
+
+func ChangeName(html string) string {
+	return strings.Replace(html, "Diego", "Gabriel", 1)
+}
+
+func ChangeLastName(html string) string {
+	return strings.Replace(html, "Medina", "Bauman", 1)
+}

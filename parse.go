@@ -11,24 +11,19 @@ import (
 
 type HTMLTransform func(string) string
 
-type snippetAndNode struct {
+/*type snippetAndNode struct {
 	FunctionName string
 	HTML         string
 }
-
-var functionMap = struct {
+*/
+var FunctionMap = struct {
 	sync.RWMutex
-	m map[string]HTMLTransform
-}{m: make(map[string]HTMLTransform)}
+	M map[string]HTMLTransform
+}{M: make(map[string]HTMLTransform)}
 
-var ch = make(chan snippetAndNode)
+/*var ch = make(chan snippetAndNode)*/
 
 func MarshallElem(in string) string {
-	//fmt.Println("\n\n\n\n\n1")
-	functionMap.Lock()
-	functionMap.m["ChangeName"] = ChangeName
-	functionMap.m["ChangeLastName"] = ChangeLastName
-	functionMap.Unlock()
 	//go readChan(ch)
 
 	completeHTML := ""
@@ -45,9 +40,8 @@ func MarshallElem(in string) string {
 			if len(element.Attr) == 0 {
 				completeHTML = completeHTML + "<" + element.Name.Local
 			}
-			functionName := ""
-			for _, value := range element.Attr {
-				err, res := processSnippet(value, decoder, element.Name.Local)
+			for _, attr := range element.Attr {
+				err, res := processSnippet(attr, decoder, element.Name.Local, "")
 				if err != nil {
 					return err.Error()
 				}
@@ -55,9 +49,6 @@ func MarshallElem(in string) string {
 			}
 			if !strings.HasSuffix(completeHTML, ">") {
 				completeHTML = completeHTML + ">"
-			}
-			if functionName != "" {
-				fmt.Printf("functionName: %v\n", functionName)
 			}
 		case xml.CharData:
 			fmt.Printf("CharData: %+v\n", string(element))
@@ -71,77 +62,94 @@ func MarshallElem(in string) string {
 			fmt.Printf("4: %+v\n", element)
 
 		default:
-			fmt.Errorf("\nIf yo uare here, you are missing a type: %v\n", element)
+			fmt.Errorf("\nIf you are here, you are missing a type: %v\n", element)
 		}
 
 	}
 	return completeHTML
 }
 
-func processSnippet(value xml.Attr, decoder *xml.Decoder, parentTag string) (error, string) {
+func processSnippet(currentAttr xml.Attr, decoder *xml.Decoder, parentTag string, scopeFunction string) (error, string) {
 	snippetHTML := ""
-	if parentTag != "" {
+	if parentTag != "" && currentAttr.Name.Local != "data-lift" {
+		snippetHTML = "<" + parentTag + " " + currentAttr.Name.Local + "=\"" + currentAttr.Value + "\">"
+	} else if parentTag != "" {
 		snippetHTML = "<" + parentTag + ">"
 	}
+
 	open := 1
 	closingTags := 0
 
-	if value.Name.Local == "data-lift" {
-		for {
-			tok, err := decoder.Token()
-			if err != nil {
-				//We are done processing tokens, let's end.
-				close(ch)
-				return err, snippetHTML
-			}
-			switch innerTok := tok.(type) {
-			case xml.StartElement:
-				snippetHTML = snippetHTML + "<" + innerTok.Name.Local
-				for _, attr := range innerTok.Attr {
-					if attr.Name.Local != "data-lift" {
-						snippetHTML = snippetHTML + " " + attr.Name.Local + "=\"" + attr.Value + "\""
-					}
-					err, super := processSnippet(attr, decoder, "")
-					if err != nil {
-						return err, ""
-					}
-					if strings.HasSuffix(snippetHTML, ">") {
-						snippetHTML = snippetHTML + super
-					} else {
-						snippetHTML = snippetHTML + ">" + super
-					}
-				}
-				open++
-			case xml.CharData:
-				snippetHTML = snippetHTML + string(innerTok)
-			case xml.EndElement:
-				snippetHTML = snippetHTML + "</" + innerTok.Name.Local + ">"
-				closingTags++
-				if open == closingTags { //do we have our matching closing tag? //This fails with autoclose tags I think
-					//ch <- snippetAndNode{value.Value, snippetHTML}
-					functionMap.RLock()
-					f, ok := functionMap.m[value.Value]
-					functionMap.RUnlock()
-					if ok {
-						return nil, f(snippetHTML)
-					} else {
-						return errors.New("Did not find function " + value.Value), ""
-					}
-
-				}
-			}
+	//if currentAttr.Name.Local != "data-lift" {
+	for {
+		if currentAttr.Name.Local == "data-lift" {
+			//fmt.Println("0 " + currentAttr.Value)
+			scopeFunction = currentAttr.Value
 		}
 
+		//fmt.Println("1 current attr " + currentAttr.Name.Local)
+		//fmt.Println("2 scopeFunction: ===> " + scopeFunction)
+		tok, err := decoder.Token()
+		if err != nil {
+			//fmt.Println("6 " + err.Error())
+			//We are done processing tokens, let's end.
+			/*close(ch)*/
+			if err.Error() == "EOF" {
+				return nil, snippetHTML
+			} else {
+				return err, snippetHTML
+			}
+
+		}
+		switch innerTok := tok.(type) {
+		case xml.StartElement:
+			snippetHTML = snippetHTML + "<" + innerTok.Name.Local
+			for _, attr := range innerTok.Attr {
+				if attr.Name.Local != "data-lift" {
+					snippetHTML = snippetHTML + " " + attr.Name.Local + "=\"" + attr.Value + "\""
+				}
+				err, super := processSnippet(attr, decoder, "", scopeFunction)
+				if err != nil {
+					return err, ""
+				}
+				if strings.HasSuffix(snippetHTML, ">") {
+					snippetHTML = snippetHTML + super
+				} else {
+					snippetHTML = snippetHTML + ">" + super
+				}
+			}
+			open++
+		case xml.CharData:
+			snippetHTML = snippetHTML + string(innerTok)
+		case xml.EndElement:
+			snippetHTML = snippetHTML + "</" + innerTok.Name.Local + ">"
+			closingTags++
+			if open == closingTags { //do we have our matching closing tag? //This fails with autoclose tags I think
+				//ch <- snippetAndNode{value.Value, snippetHTML}
+
+				//if value.Name.Local == "data-lift" {
+				if scopeFunction != "" {
+					FunctionMap.RLock()
+					f, found := FunctionMap.M[scopeFunction]
+					FunctionMap.RUnlock()
+					if found {
+						scopeFunction = ""
+						return nil, f(snippetHTML)
+					} else {
+						return errors.New("Did not find function: '" + scopeFunction + "'"), ""
+					}
+				} else {
+					return nil, snippetHTML
+				}
+
+			}
+		default:
+			fmt.Errorf("\n1- If you are here, you are missing a type: %v\n", innerTok)
+		}
 	}
-	return nil, ""
-}
 
-func ChangeName(html string) string {
-	return strings.Replace(html, "Diego", "Gabriel", 1)
-}
-
-func ChangeLastName(html string) string {
-	return strings.Replace(html, "Medina", "Bauman", 1)
+	//}
+	//return nil, ""
 }
 
 //readChan receives the snippet name and the html we will work on.
@@ -155,9 +163,9 @@ func ChangeLastName(html string) string {
 			if ok == true { //if is false when you close the channel
 				buffer = data
 				fmt.Printf("Found snippet: %v\n", buffer.FunctionName)
-				//functionMap.RLock()
-				//f := functionMap.m[buffer.FunctionName]
-				//functionMap.RUnlock()
+				//FunctionMap.RLock()
+				//f := FunctionMap.m[buffer.FunctionName]
+				//FunctionMap.RUnlock()
 				//fmt.Printf("result is : %v\n", f(buffer.HTML))
 			}
 		}

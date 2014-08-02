@@ -13,3 +13,16 @@ You can see an example application by:
 then you can go to http://127.0.0.1:7070/index and you will see a simple page displaying the current time. If you refresh the page, the time will update.
 
 **This is really early alpha, but it works!**
+
+
+##Running tests
+
+`go test`
+
+###Benchmark
+
+`go test -bench .`
+
+###Benchmark memory
+
+`go test -bench  . -benchmem`
