@@ -12,7 +12,7 @@ func init() {
 	FunctionMap.Unlock()
 }
 
-func TestMarshallElemDifferentSnippets(t *testing.T) {
+/*func TestMarshallElemDifferentSnippets(t *testing.T) {
 	res := MarshallElem(html1)
 	if res != html1Expected {
 		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html1Expected, res)
@@ -58,6 +58,13 @@ func TestMarshallUntouchedStringsAfterFunction(t *testing.T) {
 	res := MarshallElem(html7)
 	if res != html7Expected {
 		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html7Expected, res)
+	}
+}
+*/
+func TestMarshallMultipleComplexAttributes(t *testing.T) {
+	res := MarshallElem(html8)
+	if res != html8Expected {
+		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html8Expected, res)
 	}
 }
 
@@ -126,6 +133,9 @@ const html6Expected = (`<html><head></head><body><div><p name="name">Diego</p></
 
 const html7 = (`<div><p><span data-lift="ChangeLastName">Medina</span></p><p>Here is some random string nobody changed.</p></div>`)
 const html7Expected = (`<div><p><span>Bauman</span></p><p>Here is some random string nobody changed.</p></div>`)
+
+const html8 = (`<meta http-equiv="X-UA-Compatible" content="IE=Edge"></meta>`)
+const html8Expected = (`<meta http-equiv="X-UA-Compatible" content="IE=Edge"></meta>`)
 
 func ChangeName(html string) string {
 	return strings.Replace(html, "Diego", "Gabriel", 1)
