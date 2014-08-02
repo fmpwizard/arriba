@@ -27,9 +27,7 @@ func MarshallElem(in string) string {
 	//go readChan(ch)
 
 	completeHTML := ""
-
 	decoder := xml.NewDecoder(bytes.NewBufferString(in))
-
 	for {
 		token, _ := decoder.Token()
 		if token == nil {
@@ -37,16 +35,19 @@ func MarshallElem(in string) string {
 		}
 		switch element := token.(type) {
 		case xml.StartElement:
-			if len(element.Attr) == 0 {
-				completeHTML = completeHTML + "<" + element.Name.Local
-			}
+			completeHTML = completeHTML + "<" + element.Name.Local
 			for _, attr := range element.Attr {
-				err, res := processSnippet(attr, decoder, element.Name.Local, "")
-				if err != nil {
-					return err.Error()
+				if attr.Name.Local != "data-lift" {
+					completeHTML = completeHTML + " " + attr.Name.Local + "=\"" + attr.Value + "\""
 				}
-				completeHTML = completeHTML + res
 			}
+			completeHTML = completeHTML + ">"
+
+			err, res := processSnippet(decoder, element.Name.Local, "")
+			if err != nil {
+				return err.Error()
+			}
+			completeHTML = completeHTML + res
 			if !strings.HasSuffix(completeHTML, ">") {
 				completeHTML = completeHTML + ">"
 			}
@@ -69,29 +70,15 @@ func MarshallElem(in string) string {
 	return completeHTML
 }
 
-func processSnippet(currentAttr xml.Attr, decoder *xml.Decoder, parentTag string, scopeFunction string) (error, string) {
+func processSnippet(decoder *xml.Decoder, parentTag string, scopeFunction string) (error, string) {
 	snippetHTML := ""
-	if parentTag != "" && currentAttr.Name.Local != "data-lift" {
-		snippetHTML = "<" + parentTag + " " + currentAttr.Name.Local + "=\"" + currentAttr.Value + "\">"
-	} else if parentTag != "" {
-		snippetHTML = "<" + parentTag + ">"
-	}
 
 	open := 1
 	closingTags := 0
 
-	//if currentAttr.Name.Local != "data-lift" {
 	for {
-		if currentAttr.Name.Local == "data-lift" {
-			//fmt.Println("0 " + currentAttr.Value)
-			scopeFunction = currentAttr.Value
-		}
-
-		//fmt.Println("1 current attr " + currentAttr.Name.Local)
-		//fmt.Println("2 scopeFunction: ===> " + scopeFunction)
 		tok, err := decoder.Token()
 		if err != nil {
-			//fmt.Println("6 " + err.Error())
 			//We are done processing tokens, let's end.
 			/*close(ch)*/
 			if err.Error() == "EOF" {
@@ -107,16 +94,19 @@ func processSnippet(currentAttr xml.Attr, decoder *xml.Decoder, parentTag string
 			for _, attr := range innerTok.Attr {
 				if attr.Name.Local != "data-lift" {
 					snippetHTML = snippetHTML + " " + attr.Name.Local + "=\"" + attr.Value + "\""
-				}
-				err, super := processSnippet(attr, decoder, "", scopeFunction)
-				if err != nil {
-					return err, ""
-				}
-				if strings.HasSuffix(snippetHTML, ">") {
-					snippetHTML = snippetHTML + super
 				} else {
-					snippetHTML = snippetHTML + ">" + super
+					scopeFunction = attr.Value
 				}
+			}
+			snippetHTML = snippetHTML + ">"
+			err, super := processSnippet(decoder, "", scopeFunction)
+			if err != nil {
+				return err, ""
+			}
+			if strings.HasSuffix(snippetHTML, ">") {
+				snippetHTML = snippetHTML + super
+			} else {
+				snippetHTML = snippetHTML + ">" + super
 			}
 			open++
 		case xml.CharData:
@@ -127,7 +117,6 @@ func processSnippet(currentAttr xml.Attr, decoder *xml.Decoder, parentTag string
 			if open == closingTags { //do we have our matching closing tag? //This fails with autoclose tags I think
 				//ch <- snippetAndNode{value.Value, snippetHTML}
 
-				//if value.Name.Local == "data-lift" {
 				if scopeFunction != "" {
 					FunctionMap.RLock()
 					f, found := FunctionMap.M[scopeFunction]
@@ -148,8 +137,6 @@ func processSnippet(currentAttr xml.Attr, decoder *xml.Decoder, parentTag string
 		}
 	}
 
-	//}
-	//return nil, ""
 }
 
 //readChan receives the snippet name and the html we will work on.

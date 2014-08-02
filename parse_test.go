@@ -12,7 +12,7 @@ func init() {
 	FunctionMap.Unlock()
 }
 
-/*func TestMarshallElemDifferentSnippets(t *testing.T) {
+func TestMarshallElemDifferentSnippets(t *testing.T) {
 	res := MarshallElem(html1)
 	if res != html1Expected {
 		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html1Expected, res)
@@ -60,7 +60,7 @@ func TestMarshallUntouchedStringsAfterFunction(t *testing.T) {
 		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html7Expected, res)
 	}
 }
-*/
+
 func TestMarshallMultipleComplexAttributes(t *testing.T) {
 	res := MarshallElem(html8)
 	if res != html8Expected {
