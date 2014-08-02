@@ -51,7 +51,7 @@ func MarshallElem(in string) string {
 				completeHTML = completeHTML + ">"
 			}
 		case xml.CharData:
-			fmt.Printf("CharData: %+v\n", string(element))
+			completeHTML = completeHTML + string(element)
 		case xml.EndElement:
 			completeHTML = completeHTML + "</" + element.Name.Local + ">"
 		case xml.Comment:

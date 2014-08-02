@@ -54,6 +54,13 @@ func TestMarshallUntouchedStrings(t *testing.T) {
 	}
 }
 
+func TestMarshallUntouchedStringsAfterFunction(t *testing.T) {
+	res := MarshallElem(html7)
+	if res != html7Expected {
+		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html7Expected, res)
+	}
+}
+
 func BenchmarkMarshallElemDifferentSnippets(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		res := MarshallElem(html1)
@@ -116,6 +123,9 @@ const html5Expected = (`Did not find function: 'DoesNotExist'`)
 
 const html6 = (`<html><head></head><body><div><p name="name">Diego</p></div></body></html>`)
 const html6Expected = (`<html><head></head><body><div><p name="name">Diego</p></div></body></html>`)
+
+const html7 = (`<div><p><span data-lift="ChangeLastName">Medina</span></p><p>Here is some random string nobody changed.</p></div>`)
+const html7Expected = (`<div><p><span>Bauman</span></p><p>Here is some random string nobody changed.</p></div>`)
 
 func ChangeName(html string) string {
 	return strings.Replace(html, "Diego", "Gabriel", 1)
