@@ -105,13 +105,15 @@ func (stack *Stack) Size() int {
 	return stack.size
 }
 
-const html3 = (`<html><body><div data-lift="ChangeName"><p name="name2">xxxxxxx</p></div><p data-lift="ChangeLastName">zzzzzzzzzzzz</p></body></html>`)
+const html3 = (`<html><body><div data-lift="ChangeName">PEPE1<p name="name2">Diego</p></div>PIPI1<p data-lift="ChangeLastName">zzzzzzzzzzzz</p></body></html>`)
 /* *
 <html>
 	<body>
 		<div data-lift="ChangeName">
+			PEPE
 			<p name="name2">xxxxxxx</p>
 		</div>
+		PIPI
 		<p data-lift="ChangeLastName">zzzzzzzzzzzz</p>
 	</body>
 </html>
@@ -134,26 +136,24 @@ func Children(tokenArray []xml.Token, initialIndex int) ([]xml.Token, int, *Stac
 				closingTag = i
 				break
 			}
-			stack.Push(innerTok)
 
 		case xml.StartElement:
 			if (openTags - closedTags) == 1 {
-				fmt.Print("Children detected ")
-				fmt.Println(i)
 				childStackIndex.Push(i)
 			}
 			openTags++
-			stack.Push(innerTok)
 
 		case xml.CharData:
-			fmt.Println("Child chardata detected -+++-+-+-")
-			stack.Push(xml.CopyToken(innerTok))
+			if (openTags - closedTags) == 1 {
+				fmt.Println("CHAR CHILDREN " + string(innerTok))
+				stack.Push(xml.CopyToken(innerTok))
+			}
 		}
 	}
 	var ret = make([]xml.Token, stack.Size())
 	var i = stack.Size()
 	for i > 0 {
-		ret[i - 1] = stack.Pop()
+		ret[i - 1] = xml.CopyToken(stack.Pop())
 		i--
 	}
 	return ret, closingTag, childStackIndex
@@ -197,10 +197,14 @@ type StackedResult struct {
 	level int
 }
 
-func StackedResultToString(stack *Stack) string {
+func StackedResultToString(stack *Stack, myLevel int) string {
 	var result = ""
-	for stack.Size() > 0 {
-		result = stack.Pop().(StackedResult).str + result
+	for stack.Size() > 0 && stack.Head().(StackedResult).level > myLevel {
+		//		fmt.Print("Comparing level: ")
+		//		fmt.Print(stack.Head().(StackedResult).level)
+		//		fmt.Print("with level: ")
+		//		fmt.Print(myLevel)
+		result = stack.Pop().(StackedResult).str+result
 	}
 	return result
 }
@@ -218,7 +222,7 @@ func processTag(token xml.Token, visited bool, resultStack *Stack, level int) st
 				childNodesStr := ""
 				lvl := resultStack.Head().(StackedResult).level
 				if (visited && resultStack.Size() > 0 && lvl > level) {
-					childNodesStr = StackedResultToString(resultStack)
+					childNodesStr = StackedResultToString(resultStack, level)
 				}
 				// get the function from the map
 				var funcResult = ChangeName(childNodesStr) // TODO get the function from the map
@@ -227,7 +231,6 @@ func processTag(token xml.Token, visited bool, resultStack *Stack, level int) st
 		}
 		stringTag = stringTag + ">"
 	case xml.CharData:
-		fmt.Println("char data " + string(innerTok))
 		stringTag = stringTag + string(innerTok)
 	case xml.EndElement:
 		stringTag = stringTag+ "</" + innerTok.Name.Local + ">"
@@ -247,13 +250,11 @@ func Princ() {
 
 	for itStack.Size() > 0 {
 		currentNode = itStack.Pop().(Stackednode)
-		fmt.Print("result stack")
-		fmt.Print(resultStack.Size())
 		switch innerTok := tokenArray[currentNode.NodePosition].(type) {
 		case xml.EndElement:
 			fmt.Println("")
 		case xml.CharData:
-			var processed = processTag(tokenArray[currentNode.NodePosition], currentNode.Visited, resultStack, currentNode.level)
+			var processed = string(innerTok)
 			resultStack.Push(StackedResult{processed, currentNode.level })
 		default:
 			fmt.Println(innerTok)
@@ -261,7 +262,14 @@ func Princ() {
 				var children, last, childrenIndexes = Children(tokenArray, currentNode.NodePosition + 1)
 				currentNode.ClosePosition = last
 				currentNode.Visited = true
-				if len(children) > 0 {
+				// Agregar aca el children
+				for _,child := range children {
+					fmt.Print("Adding child char " + string(child.(xml.CharData)) + " for ")
+					fmt.Println(currentNode.level)
+					resultStack.Push(StackedResult{string(child.(xml.CharData)), currentNode.level + 1})
+				}
+
+				if childrenIndexes.Size() > 0 {
 					itStack.Push(currentNode)
 					for childrenIndexes.Size() > 0 {
 						index := childrenIndexes.Pop().(int)
@@ -275,7 +283,11 @@ func Princ() {
 					// traverse the attributes of the node and apply the function specified by data-lift attr
 					// save the string version of the node in result slice with the closing tag
 					var processed = processTag(tokenArray[currentNode.NodePosition], currentNode.Visited, resultStack, currentNode.level)
-					resultStack.Push(StackedResult{processed + processTag(tokenArray[currentNode.ClosePosition], false, resultStack, currentNode.level), currentNode.level})
+					processedChildren := ""
+	//				if resultStack.Size() > 0 && resultStack.Head().(StackedResult).level > currentNode.level {
+						processedChildren = StackedResultToString(resultStack, currentNode.level)
+	//				}
+					resultStack.Push(StackedResult{processed + processedChildren + processTag(tokenArray[currentNode.ClosePosition], false, resultStack, currentNode.level), currentNode.level})
 					fmt.Println("Result stackv: " + resultStack.Head().(StackedResult).str)
 				}
 			} else {
@@ -283,9 +295,9 @@ func Princ() {
 				// save the string version of the node in result slice with the closing tag
 				var processed = processTag(tokenArray[currentNode.NodePosition], currentNode.Visited, resultStack, currentNode.level)
 				processedChildren := ""
-				if resultStack.Size() > 0 && resultStack.Head().(StackedResult).level > currentNode.level {
-					processedChildren = StackedResultToString(resultStack)
-				}
+	//			if resultStack.Size() > 0 && resultStack.Head().(StackedResult).level > currentNode.level {
+					processedChildren = StackedResultToString(resultStack, currentNode.level)
+	//			}
 				resultStack.Push(StackedResult{processed + processedChildren + processTag(tokenArray[currentNode.ClosePosition], false, resultStack, currentNode.level), currentNode.level})
 				fmt.Print("Result stack/: ")
 				fmt.Println(resultStack.Head().(StackedResult))
