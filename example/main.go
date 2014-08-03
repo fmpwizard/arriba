@@ -105,7 +105,7 @@ func (stack *Stack) Size() int {
 	return stack.size
 }
 
-const html3 = (`<html><body><div data-lift="ChangeName">PEPE1<p name="name2">Diego</p></div>PIPI1<p data-lift="ChangeLastName">zzzzzzzzzzzz</p></body></html>`)
+const html3 = (`<html sss="ss"><body><div data-lift="ChangeName" class="asdasd"><p name="name2">Diego</p></div><p data-lift="ChangeLastName">zzzzzzzzz<strong>zzz</strong></p></body></html>`)
 /* *
 <html>
 	<body>
@@ -147,6 +147,7 @@ func Children(tokenArray []xml.Token, initialIndex int) ([]xml.Token, int, *Stac
 			if (openTags - closedTags) == 1 {
 				fmt.Println("CHAR CHILDREN " + string(innerTok))
 				stack.Push(xml.CopyToken(innerTok))
+				childStackIndex.Push(i)
 			}
 		}
 	}
@@ -200,10 +201,6 @@ type StackedResult struct {
 func StackedResultToString(stack *Stack, myLevel int) string {
 	var result = ""
 	for stack.Size() > 0 && stack.Head().(StackedResult).level > myLevel {
-		//		fmt.Print("Comparing level: ")
-		//		fmt.Print(stack.Head().(StackedResult).level)
-		//		fmt.Print("with level: ")
-		//		fmt.Print(myLevel)
 		result = stack.Pop().(StackedResult).str+result
 	}
 	return result
@@ -259,24 +256,13 @@ func Princ() {
 		default:
 			fmt.Println(innerTok)
 			if !currentNode.Visited {
-				var children, last, childrenIndexes = Children(tokenArray, currentNode.NodePosition + 1)
+				var _, last, childrenIndexes = Children(tokenArray, currentNode.NodePosition + 1)
 				currentNode.ClosePosition = last
 				currentNode.Visited = true
-				// Agregar aca el children
-				for _,child := range children {
-					fmt.Print("Adding child char " + string(child.(xml.CharData)) + " for ")
-					fmt.Println(currentNode.level)
-					resultStack.Push(StackedResult{string(child.(xml.CharData)), currentNode.level + 1})
-				}
-
 				if childrenIndexes.Size() > 0 {
 					itStack.Push(currentNode)
 					for childrenIndexes.Size() > 0 {
 						index := childrenIndexes.Pop().(int)
-						fmt.Print("Adding ")
-						fmt.Println(tokenArray[index])
-						fmt.Print("Level ")
-						fmt.Println(currentNode.level)
 						itStack.Push(Stackednode{index, -1, currentNode.level + 1, false})
 					}
 				} else {
@@ -284,9 +270,7 @@ func Princ() {
 					// save the string version of the node in result slice with the closing tag
 					var processed = processTag(tokenArray[currentNode.NodePosition], currentNode.Visited, resultStack, currentNode.level)
 					processedChildren := ""
-	//				if resultStack.Size() > 0 && resultStack.Head().(StackedResult).level > currentNode.level {
-						processedChildren = StackedResultToString(resultStack, currentNode.level)
-	//				}
+					processedChildren = StackedResultToString(resultStack, currentNode.level)
 					resultStack.Push(StackedResult{processed + processedChildren + processTag(tokenArray[currentNode.ClosePosition], false, resultStack, currentNode.level), currentNode.level})
 					fmt.Println("Result stackv: " + resultStack.Head().(StackedResult).str)
 				}
@@ -295,9 +279,7 @@ func Princ() {
 				// save the string version of the node in result slice with the closing tag
 				var processed = processTag(tokenArray[currentNode.NodePosition], currentNode.Visited, resultStack, currentNode.level)
 				processedChildren := ""
-	//			if resultStack.Size() > 0 && resultStack.Head().(StackedResult).level > currentNode.level {
-					processedChildren = StackedResultToString(resultStack, currentNode.level)
-	//			}
+				processedChildren = StackedResultToString(resultStack, currentNode.level)
 				resultStack.Push(StackedResult{processed + processedChildren + processTag(tokenArray[currentNode.ClosePosition], false, resultStack, currentNode.level), currentNode.level})
 				fmt.Print("Result stack/: ")
 				fmt.Println(resultStack.Head().(StackedResult))
