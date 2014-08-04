@@ -12,14 +12,14 @@ import (
 	"strings"
 	"testing"
 
-	"code.google.com/p/go.text/encoding"
-	"code.google.com/p/go.text/encoding/charmap"
-	"code.google.com/p/go.text/encoding/japanese"
-	"code.google.com/p/go.text/encoding/korean"
-	"code.google.com/p/go.text/encoding/simplifiedchinese"
-	"code.google.com/p/go.text/encoding/traditionalchinese"
-	"code.google.com/p/go.text/encoding/unicode"
-	"code.google.com/p/go.text/transform"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/encoding"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/encoding/charmap"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/encoding/japanese"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/encoding/korean"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/encoding/simplifiedchinese"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/encoding/traditionalchinese"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/encoding/unicode"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/transform"
 )
 
 func trim(s string) string {

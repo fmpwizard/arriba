@@ -9,7 +9,7 @@ import (
 	"testing"
 	"unicode"
 
-	"code.google.com/p/go.text/language"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/language"
 )
 
 // TODO: test that tables are properly dropped by the linker for various use

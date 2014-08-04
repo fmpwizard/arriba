@@ -8,8 +8,8 @@ import (
 	"log"
 	"unicode/utf16"
 
-	"code.google.com/p/go.text/collate"
-	"code.google.com/p/go.text/language"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/collate"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/language"
 )
 
 // Input holds an input string in both UTF-8 and UTF-16 format.

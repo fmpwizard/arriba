@@ -5,8 +5,8 @@
 package h5
 
 import (
-	exphtml "code.google.com/p/go.net/html"
-	"code.google.com/p/go.net/html/atom"
+	exphtml "github.com/fmpwizard/arriba/vendor/code.google.com/p/go.net/html"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.net/html/atom"
 
 	"io"
 	"strings"

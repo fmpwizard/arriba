@@ -1,7 +1,7 @@
 package h5
 
 import (
-	"code.google.com/p/go.net/html"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.net/html"
 	"reflect"
 	"testing"
 )

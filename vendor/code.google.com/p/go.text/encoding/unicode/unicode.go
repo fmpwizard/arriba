@@ -10,8 +10,8 @@ import (
 	"unicode/utf16"
 	"unicode/utf8"
 
-	"code.google.com/p/go.text/encoding"
-	"code.google.com/p/go.text/transform"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/encoding"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/transform"
 )
 
 // UTF16 returns a UTF-16 Encoding for the given default endianness and byte

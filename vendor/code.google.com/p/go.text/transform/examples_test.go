@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"unicode"
 
-	"code.google.com/p/go.text/transform"
-	"code.google.com/p/go.text/unicode/norm"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/transform"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/unicode/norm"
 )
 
 func ExampleRemoveFunc() {

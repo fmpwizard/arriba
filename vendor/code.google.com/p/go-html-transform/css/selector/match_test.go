@@ -1,9 +1,9 @@
 package selector
 
 import (
-	"code.google.com/p/go-html-transform/h5"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go-html-transform/h5"
 
-	"code.google.com/p/go.net/html"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.net/html"
 	"testing"
 )
 

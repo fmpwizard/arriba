@@ -8,8 +8,8 @@ import (
 	"errors"
 	"unicode/utf8"
 
-	"code.google.com/p/go.text/encoding"
-	"code.google.com/p/go.text/transform"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/encoding"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/transform"
 )
 
 // ISO2022JP is the ISO-2022-JP encoding.

@@ -7,8 +7,8 @@ package display_test
 import (
 	"fmt"
 
-	"code.google.com/p/go.text/display"
-	"code.google.com/p/go.text/language"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/display"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/language"
 )
 
 func ExampleNamer() {

@@ -11,9 +11,9 @@ import (
 	"bytes"
 	"strings"
 
-	"code.google.com/p/go.text/collate/colltab"
-	"code.google.com/p/go.text/language"
-	"code.google.com/p/go.text/unicode/norm"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/collate/colltab"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/language"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/unicode/norm"
 )
 
 // AlternateHandling identifies the various ways in which variables are handled.

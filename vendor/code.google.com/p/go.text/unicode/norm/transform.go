@@ -7,7 +7,7 @@ package norm
 import (
 	"unicode/utf8"
 
-	"code.google.com/p/go.text/transform"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/transform"
 )
 
 // Transform implements the transform.Transformer interface. It may need to

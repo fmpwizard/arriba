@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"code.google.com/p/go.text/internal/ucd"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/internal/ucd"
 )
 
 func Example() {

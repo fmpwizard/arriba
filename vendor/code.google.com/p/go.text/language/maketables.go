@@ -11,7 +11,7 @@ package main
 
 import (
 	"bufio"
-	"code.google.com/p/go.text/cldr"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/cldr"
 	"flag"
 	"fmt"
 	"hash"

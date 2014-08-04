@@ -7,9 +7,9 @@ package collate
 import (
 	"testing"
 
-	"code.google.com/p/go.text/collate/build"
-	"code.google.com/p/go.text/collate/colltab"
-	"code.google.com/p/go.text/unicode/norm"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/collate/build"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/collate/colltab"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/unicode/norm"
 )
 
 type ColElems []Weights

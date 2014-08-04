@@ -17,8 +17,8 @@ package h5
 
 import (
 	"bytes"
-	"code.google.com/p/go.net/html"
-	"code.google.com/p/go.net/html/atom"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.net/html"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.net/html/atom"
 	"fmt"
 	"io"
 	"strings"

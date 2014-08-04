@@ -9,7 +9,7 @@ package charmap
 import (
 	"unicode/utf8"
 
-	"code.google.com/p/go.text/transform"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/transform"
 )
 
 // utf8Enc holds a rune's UTF-8 encoding in data[:len].

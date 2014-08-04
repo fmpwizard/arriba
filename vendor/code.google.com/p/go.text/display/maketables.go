@@ -19,8 +19,8 @@ import (
 	"sort"
 	"strings"
 
-	"code.google.com/p/go.text/cldr"
-	"code.google.com/p/go.text/language"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/cldr"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/language"
 )
 
 var (

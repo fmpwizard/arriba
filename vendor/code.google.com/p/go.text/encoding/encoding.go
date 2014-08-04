@@ -9,7 +9,7 @@
 //	rInUTF8 := transform.NewReader(r, e.NewDecoder())
 // and to convert from UTF-8 to the encoding e:
 //	wInUTF8 := transform.NewWriter(w, e.NewEncoder())
-// In both cases, import "code.google.com/p/go.text/transform".
+// In both cases, import "github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/transform".
 //
 // Encoding implementations are provided in other packages, such as
 // code.google.com/p/go.text/encoding/charmap and
@@ -20,7 +20,7 @@ import (
 	"errors"
 	"unicode/utf8"
 
-	"code.google.com/p/go.text/transform"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/transform"
 )
 
 // Encoding is a character set encoding that can be transformed to and from

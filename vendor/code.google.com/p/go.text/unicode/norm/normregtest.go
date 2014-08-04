@@ -23,7 +23,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"code.google.com/p/go.text/unicode/norm"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/unicode/norm"
 )
 
 func main() {

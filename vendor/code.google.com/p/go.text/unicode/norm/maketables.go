@@ -24,7 +24,7 @@ import (
 	"strings"
 	"unicode"
 
-	"code.google.com/p/go.text/internal/ucd"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/internal/ucd"
 )
 
 func main() {

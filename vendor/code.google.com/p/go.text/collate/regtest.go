@@ -24,9 +24,9 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"code.google.com/p/go.text/collate"
-	"code.google.com/p/go.text/collate/build"
-	"code.google.com/p/go.text/collate/colltab"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/collate"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/collate/build"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/collate/colltab"
 )
 
 // This regression test runs tests for the test files in CollationTest.zip

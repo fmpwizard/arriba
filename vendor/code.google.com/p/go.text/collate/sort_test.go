@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"code.google.com/p/go.text/collate"
-	"code.google.com/p/go.text/language"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/collate"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/language"
 )
 
 func ExampleCollator_Strings() {

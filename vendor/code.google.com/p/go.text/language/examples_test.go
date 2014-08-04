@@ -5,7 +5,7 @@
 package language_test
 
 import (
-	"code.google.com/p/go.text/language"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/language"
 	"fmt"
 )
 

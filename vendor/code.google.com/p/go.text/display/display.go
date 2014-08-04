@@ -15,7 +15,7 @@ package display
 import (
 	"strings"
 
-	"code.google.com/p/go.text/language"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/language"
 )
 
 /*

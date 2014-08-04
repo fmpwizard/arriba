@@ -2,7 +2,7 @@
 // http://www.w3.org/TR/css-syntax-3/
 package css
 
-import "code.google.com/p/go-html-transform/css/selector"
+import "github.com/fmpwizard/arriba/vendor/code.google.com/p/go-html-transform/css/selector"
 
 // Stylesheet is a list of Statements
 type Stylesheet struct {

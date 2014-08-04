@@ -11,8 +11,8 @@ import (
 	"strings"
 	"unicode"
 
-	"code.google.com/p/go.text/collate/colltab"
-	"code.google.com/p/go.text/unicode/norm"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/collate/colltab"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/unicode/norm"
 )
 
 type logicalAnchor int

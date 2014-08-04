@@ -1,7 +1,7 @@
 package cldr_test
 
 import (
-	"code.google.com/p/go.text/cldr"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/cldr"
 	"fmt"
 )
 

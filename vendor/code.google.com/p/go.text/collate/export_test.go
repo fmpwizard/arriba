@@ -10,7 +10,7 @@ package collate
 import (
 	"fmt"
 
-	"code.google.com/p/go.text/collate/colltab"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/collate/colltab"
 )
 
 const (

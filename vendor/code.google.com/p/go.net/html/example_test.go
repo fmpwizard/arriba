@@ -10,7 +10,7 @@ import (
 	"log"
 	"strings"
 
-	"code.google.com/p/go.net/html"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.net/html"
 )
 
 func ExampleParse() {

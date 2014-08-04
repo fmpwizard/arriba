@@ -7,7 +7,7 @@ package build
 import (
 	"testing"
 
-	"code.google.com/p/go.text/collate/colltab"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.text/collate/colltab"
 )
 
 type ceTest struct {
