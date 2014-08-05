@@ -17,7 +17,7 @@ then you can go to http://127.0.0.1:7070/index and you will see a simple page di
 
 ##Running tests
 
-`go test`
+`go test -race -cover`
 
 ###Benchmark
 

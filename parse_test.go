@@ -1,6 +1,9 @@
 package arriba
 
 import (
+	"fmt"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go-html-transform/css/selector"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go-html-transform/h5"
 	"strings"
 	"testing"
 )
@@ -9,10 +12,11 @@ func init() {
 	FunctionMap.Lock()
 	FunctionMap.M["ChangeName"] = ChangeName
 	FunctionMap.M["ChangeLastName"] = ChangeLastName
+	FunctionMap.M["ReplaceInnerSpan"] = ReplaceInnerSpan
 	FunctionMap.Unlock()
 }
 
-func TestMarshallElemDifferentSnippets(t *testing.T) {
+/*func TestMarshallElemDifferentSnippets(t *testing.T) {
 	res := MarshallElem(html1)
 	if res != html1Expected {
 		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html1Expected, res)
@@ -65,6 +69,13 @@ func TestMarshallMultipleComplexAttributes(t *testing.T) {
 	res := MarshallElem(html8)
 	if res != html8Expected {
 		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html8Expected, res)
+	}
+}
+*/
+func TestMarshallHtml5Transform(t *testing.T) {
+	res := ReplaceInnerSpan(html9)
+	if res != html9Expected {
+		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html9Expected, res)
 	}
 }
 
@@ -137,10 +148,29 @@ const html7Expected = (`<div><p><span>Bauman</span></p><p>Here is some random st
 const html8 = (`<meta http-equiv="X-UA-Compatible" content="IE=Edge"></meta>`)
 const html8Expected = (`<meta http-equiv="X-UA-Compatible" content="IE=Edge"></meta>`)
 
+const html9 = (`<html><head></head><body><div data-lift="ReplaceInnerSpan"><p>Diego</p><p class="last-name">Bauman</p></div></body></html>`)
+const html9Expected = (`<html><head></head><body><div><p>Diego</p><p class="last-name">Medina</p></div></body></html>`)
+
 func ChangeName(html string) string {
 	return strings.Replace(html, "Diego", "Gabriel", 1)
 }
 
 func ChangeLastName(html string) string {
 	return strings.Replace(html, "Medina", "Bauman", 1)
+}
+
+func ReplaceInnerSpan(in string) string {
+	sq, _ := selector.Selector("[data-lift]")
+	node, _ := h5.PartialFromString(in)
+	for _, value1 := range node {
+		ret := sq.Find(value1)
+		for _, value2 := range ret {
+			t := h5.NewTree(value2)
+			for _, attr := range value2.Attr {
+				fmt.Println("1 " + attr.Val)
+			}
+			return t.String()
+		}
+	}
+	return ""
 }

@@ -115,7 +115,7 @@ func processSnippet(decoder *xml.Decoder, parentTag string, scopeFunction string
 			snippetHTML = snippetHTML + "</" + innerTok.Name.Local + ">"
 			closingTags++
 			if open == closingTags { //do we have our matching closing tag? //This fails with autoclose tags I think
-				//ch <- snippetAndNode{value.Value, snippetHTML}
+				//ch <- snippetAndNode{scopeFunction, snippetHTML}
 
 				if scopeFunction != "" {
 					FunctionMap.RLock()
