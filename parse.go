@@ -3,6 +3,8 @@ package arriba
 import (
 	"bytes"
 	"errors"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go-html-transform/css/selector"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go-html-transform/html/transform"
 
 	//"bytes"
 	//"encoding/xml"
@@ -166,6 +168,56 @@ func processSnippet(decoder *xml.Decoder, parentTag string, scopeFunction string
 }
 */
 
+type transformationAndSnippetName struct {
+	t transform.TransformFunc
+	f string
+}
+
+func Process2(in []byte) []byte {
+	tree, _ := h5.New(bytes.NewReader(in))
+	t := transform.New(tree)
+	functionsInScope, _ := selector.Selector("[data-lift]")
+	snippetNodess := functionsInScope.Find(tree.Top())
+	for _, snippet := range snippetNodess {
+		fmt.Println("1")
+		for _, function := range snippet.Attr {
+			fmt.Println("2")
+			if function.Key == "data-lift" {
+				fmt.Println("3 " + function.Val)
+				replacement, err := do(function.Val, snippet)
+				if err == nil {
+					buf := bytes.NewBufferString("")
+					html.Render(buf, replacement)
+					fmt.Println("4 " + string(buf.Bytes()))
+					fmt.Println("5 " + "[data-lift=" + function.Val + "]")
+					t.Apply(transform.Replace(replacement), "[data-lift="+function.Val+"]")
+				}
+
+			}
+		}
+	}
+
+	/*for _, value := range transformations {
+		fmt.Println("5 " + value.f)
+		t.Apply(transform.CopyAnd(value.t), "[data-lift='"+value.f+"']'")
+	}*/
+
+	buf := bytes.NewBufferString("")
+	html.Render(buf, t.Doc())
+	return buf.Bytes()
+}
+
+func do(scopeFunction string, snippetHTML *html.Node) (*html.Node, error) {
+	FunctionMap.RLock()
+	f, found := FunctionMap.M[scopeFunction]
+	FunctionMap.RUnlock()
+	if found {
+		return f(snippetHTML), nil
+	} else {
+		return &html.Node{}, errors.New("Did not find function: '" + scopeFunction + "'")
+	}
+}
+
 func Process(in string) string {
 	//in is the html we get from the template
 	node, _ := h5.NewFromString(in)
@@ -192,17 +244,6 @@ func walkTree(n *html.Node) {
 			html.Render(buf, transformedNode)
 			fmt.Println("node2 " + string(buf.Bytes()))
 		}
-	}
-}
-
-func do(scopeFunction string, snippetHTML *html.Node) (*html.Node, error) {
-	FunctionMap.RLock()
-	f, found := FunctionMap.M[scopeFunction]
-	FunctionMap.RUnlock()
-	if found {
-		return f(snippetHTML), nil
-	} else {
-		return &html.Node{}, errors.New("Did not find function: '" + scopeFunction + "'")
 	}
 }
 

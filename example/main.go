@@ -19,6 +19,7 @@ func main() {
 	//FunctionMap holds a map of function names as they appear on the html and maps to the real function to call
 	arriba.FunctionMap.Lock()
 	arriba.FunctionMap.M["ChangeName"] = ChangeName
+	arriba.FunctionMap.M["ChangeLastName"] = ChangeLastName
 	arriba.FunctionMap.Unlock()
 	http.ListenAndServe(":7070", nil)
 
@@ -30,9 +31,9 @@ func home(rw http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	value := arriba.Process(string(t))
+	value := arriba.Process2(t)
 	rw.Header().Add("Content-Type", "text/html; charset=UTF-8")
-	rw.Write([]byte(value))
+	rw.Write(value)
 
 }
 
@@ -41,5 +42,13 @@ func ChangeName(node *html.Node) *html.Node {
 	t := transform.New(&tree)
 	replacement := h5.Text("Hayley")
 	t.Apply(transform.Replace(replacement), "p")
+	return t.Doc()
+}
+
+func ChangeLastName(node *html.Node) *html.Node {
+	tree := h5.NewTree(node)
+	t := transform.New(&tree)
+	replacement := h5.Text("Bauman")
+	t.Apply(transform.Replace(replacement), "span>span")
 	return t.Doc()
 }
