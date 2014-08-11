@@ -31,7 +31,7 @@ func home(rw http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	value := arriba.Process2(t)
+	value := arriba.Process(t)
 	rw.Header().Add("Content-Type", "text/html; charset=UTF-8")
 	rw.Write(value)
 

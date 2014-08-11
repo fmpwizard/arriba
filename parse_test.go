@@ -1,11 +1,9 @@
 package arriba
 
 import (
-	"fmt"
-	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go-html-transform/css/selector"
 	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go-html-transform/h5"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go-html-transform/html/transform"
 	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.net/html"
-	"strings"
 	"testing"
 )
 
@@ -13,16 +11,17 @@ func init() {
 	FunctionMap.Lock()
 	FunctionMap.M["ChangeName"] = ChangeName
 	FunctionMap.M["ChangeLastName"] = ChangeLastName
-	FunctionMap.M["ReplaceInnerSpan"] = ReplaceInnerSpan
 	FunctionMap.Unlock()
 }
 
-/*func TestMarshallElemDifferentSnippets(t *testing.T) {
-	res := MarshallElem(html1)
-	if res != html1Expected {
+func TestMarshallElemDifferentSnippets(t *testing.T) {
+	res := Process([]byte(html1))
+	if string(res) != html1Expected {
 		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html1Expected, res)
 	}
 }
+
+/*
 
 func TestMarshallElemSingleSnippet(t *testing.T) {
 	res := MarshallElem(html2)
@@ -73,14 +72,14 @@ func TestMarshallMultipleComplexAttributes(t *testing.T) {
 	}
 }
 */
-func TestMarshallHtml5Transform(t *testing.T) {
+/*func TestMarshallHtml5Transform(t *testing.T) {
 	res := ReplaceInnerSpan(html9)
 	if res != html9Expected {
 		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html9Expected, res)
 	}
 }
-
-func BenchmarkMarshallElemDifferentSnippets(b *testing.B) {
+*/
+/*func BenchmarkMarshallElemDifferentSnippets(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		res := MarshallElem(html1)
 		if res != html1Expected {
@@ -123,7 +122,7 @@ func BenchmarkMarshallElemSnippetNotFound(b *testing.B) {
 			b.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html5Expected, res)
 		}
 	}
-}
+}*/
 
 const html1 = (`<html><head></head><body><div data-lift="ChangeName"><p name="name">Diego</p><p data-lift="ChangeLastName">Medina</p></div></body></html>`)
 const html1Expected = (`<html><head></head><body><div><p name="name">Gabriel</p><p>Bauman</p></div></body></html>`)
@@ -152,32 +151,18 @@ const html8Expected = (`<meta http-equiv="X-UA-Compatible" content="IE=Edge"></m
 const html9 = (`<html><head></head><body><div data-lift="ReplaceInnerSpan"><p>Diego</p><p class="last-name">Bauman</p></div></body></html>`)
 const html9Expected = (`<html><head></head><body><div><p>Diego</p><p class="last-name">Medina</p></div></body></html>`)
 
-func ReplaceInnerSpan(in string) string {
-	//in is the html we get from the template
-	sq, _ := selector.Selector("[data-lift]")
-	//because the html may not be a full page, we use the Partial* function
-	node, _ := h5.PartialFromString(in)
-	for _, value1 := range node {
-		//apply the css selector to get a []*html.Node of matching nodes
-		ret := sq.Find(value1)
-		for _, value2 := range ret {
-			//if we wanted to have a *Tree of the nodes, use this
-			t := h5.NewTree(value2)
-			//here we loop over the attributes of the matching node
-			for _, attr := range value2.Attr {
-				fmt.Println("Function Name: " + attr.Val)
-				fmt.Println("html to process: " + h5.RenderNodesToString([]*html.Node{value2}))
-			}
-			return t.String()
-		}
-	}
-	return ""
+func ChangeName(node *html.Node) *html.Node {
+	tree := h5.NewTree(node)
+	t := transform.New(&tree)
+	replacement := h5.Text("Hayley")
+	t.Apply(transform.Replace(replacement), "p")
+	return t.Doc()
 }
 
-func ChangeName(html string) string {
-	return strings.Replace(html, "Diego", "Gabriel", 1)
-}
-
-func ChangeLastName(html string) string {
-	return strings.Replace(html, "Medina", "Bauman", 1)
+func ChangeLastName(node *html.Node) *html.Node {
+	tree := h5.NewTree(node)
+	t := transform.New(&tree)
+	replacement := h5.Text("Bauman")
+	t.Apply(transform.Replace(replacement), "span>span")
+	return t.Doc()
 }

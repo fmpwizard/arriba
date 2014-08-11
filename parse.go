@@ -18,7 +18,7 @@ var FunctionMap = struct {
 	M map[string]HTMLTransform
 }{M: make(map[string]HTMLTransform)}
 
-func Process2(in []byte) []byte {
+func Process(in []byte) []byte {
 	tree, _ := h5.New(bytes.NewReader(in))
 	t := transform.New(tree)
 	functionsInScope, _ := selector.Selector("[data-lift]")
