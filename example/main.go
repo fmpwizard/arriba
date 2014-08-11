@@ -5,10 +5,12 @@ package main
 
 import (
 	"github.com/fmpwizard/arriba"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go-html-transform/h5"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go-html-transform/html/transform"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.net/html"
 	"io/ioutil"
 	"net/http"
 	"runtime"
-	"strings"
 )
 
 func main() {
@@ -17,7 +19,6 @@ func main() {
 	//FunctionMap holds a map of function names as they appear on the html and maps to the real function to call
 	arriba.FunctionMap.Lock()
 	arriba.FunctionMap.M["ChangeName"] = ChangeName
-	arriba.FunctionMap.M["ChangeLastName"] = ChangeLastName
 	arriba.FunctionMap.Unlock()
 	http.ListenAndServe(":7070", nil)
 
@@ -29,16 +30,16 @@ func home(rw http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	value := arriba.MarshallElem(string(t))
+	value := arriba.Process(string(t))
 	rw.Header().Add("Content-Type", "text/html; charset=UTF-8")
 	rw.Write([]byte(value))
 
 }
 
-func ChangeName(html string) string {
-	return strings.Replace(html, "Diego", "Gabriel", 1)
-}
-
-func ChangeLastName(html string) string {
-	return strings.Replace(html, "Medina", "Bauman", 1)
+func ChangeName(node *html.Node) *html.Node {
+	tree := h5.NewTree(node)
+	t := transform.New(&tree)
+	replacement := h5.Text("Hayley")
+	t.Apply(transform.Replace(replacement), "p")
+	return t.Doc()
 }

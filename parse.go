@@ -2,28 +2,33 @@ package arriba
 
 import (
 	"bytes"
-	"encoding/xml"
 	"errors"
+
+	//"bytes"
+	//"encoding/xml"
+	//"errors"
 	"fmt"
-	"strings"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go-html-transform/h5"
+	"github.com/fmpwizard/arriba/vendor/code.google.com/p/go.net/html"
+	//"strings"
 	"sync"
 )
 
-type HTMLTransform func(string) string
+type HTMLTransform func(*html.Node) *html.Node
+
+var FunctionMap = struct {
+	sync.RWMutex
+	M map[string]HTMLTransform
+}{M: make(map[string]HTMLTransform)}
 
 /*type snippetAndNode struct {
 	FunctionName string
 	HTML         string
 }
 */
-var FunctionMap = struct {
-	sync.RWMutex
-	M map[string]HTMLTransform
-}{M: make(map[string]HTMLTransform)}
-
 /*var ch = make(chan snippetAndNode)*/
 
-func MarshallElem(in string) string {
+/*func MarshallElem(in string) string {
 	//go readChan(ch)
 
 	completeHTML := ""
@@ -80,7 +85,7 @@ func processSnippet(decoder *xml.Decoder, parentTag string, scopeFunction string
 		tok, err := decoder.Token()
 		if err != nil {
 			//We are done processing tokens, let's end.
-			/*close(ch)*/
+			//close(ch)
 			if err.Error() == "EOF" {
 				return nil, snippetHTML
 			} else {
@@ -137,7 +142,7 @@ func processSnippet(decoder *xml.Decoder, parentTag string, scopeFunction string
 		}
 	}
 
-}
+}*/
 
 //readChan receives the snippet name and the html we will work on.
 //So far is an alternative way to process snippets. We wil lcompare speeds once
@@ -160,3 +165,63 @@ func processSnippet(decoder *xml.Decoder, parentTag string, scopeFunction string
 
 }
 */
+
+func Process(in string) string {
+	//in is the html we get from the template
+	node, _ := h5.NewFromString(in)
+	//because the html may not be a full page, we use the Partial* function
+	//node, _ := h5.PartialFromString(in)
+	node.Walk(walkTree)
+	return in
+}
+
+func walkTree(n *html.Node) {
+
+	if len(n.Attr) == 0 {
+		buf := bytes.NewBufferString("")
+		html.Render(buf, n)
+		fmt.Println("node1 " + string(buf.Bytes()))
+	}
+	for _, attr := range n.Attr {
+		if attr.Key == "data-lift" {
+			transformedNode, err := do(attr.Val, n)
+			if err != nil {
+				fmt.Errorf("We got error %+v", err.Error())
+			}
+			buf := bytes.NewBufferString("")
+			html.Render(buf, transformedNode)
+			fmt.Println("node2 " + string(buf.Bytes()))
+		}
+	}
+}
+
+func do(scopeFunction string, snippetHTML *html.Node) (*html.Node, error) {
+	FunctionMap.RLock()
+	f, found := FunctionMap.M[scopeFunction]
+	FunctionMap.RUnlock()
+	if found {
+		return f(snippetHTML), nil
+	} else {
+		return &html.Node{}, errors.New("Did not find function: '" + scopeFunction + "'")
+	}
+}
+
+/*for _, value1 := range node {
+	//apply the css selector to get a []*html.Node of matching nodes
+	ret := dataLiftSelector.Find(value1)
+	for _, value2 := range ret {
+		//if we wanted to have a *Tree of the nodes, use this
+		t := h5.NewTree(value2)
+		//here we loop over the attributes of the matching node
+		for _, attr := range value2.Attr {
+			fmt.Println("Function Name: " + attr.Val)
+			fmt.Println("html to process: " + h5.RenderNodesToString([]*html.Node{value2}))
+			err, result := do(attr.Val, value2)
+			if err != nil {
+				fmt.Errorf("Error was %+v", err.Error())
+			}
+			fmt.Println("result is " + h5.RenderNodesToString([]*html.Node{result}))
+		}
+		return t.String()
+	}
+}*/
