@@ -154,8 +154,8 @@ const html9Expected = (`<html><head></head><body><div><p>Diego</p><p class="last
 func ChangeName(node *html.Node) *html.Node {
 	tree := h5.NewTree(node)
 	t := transform.New(&tree)
-	replacement := h5.Text("Hayley")
-	t.Apply(transform.ReplaceChildren(replacement), "name=name")
+	replacement := h5.Text("Gabriel")
+	t.Apply(transform.ReplaceChildren(replacement), "[name=name]")
 	return t.Doc()
 }
 

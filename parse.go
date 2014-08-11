@@ -27,9 +27,11 @@ func Process(in []byte) []byte {
 		for _, function := range snippet.Attr {
 			if function.Key == "data-lift" {
 				replacement, err := do(function.Val, snippet)
+
 				if err == nil {
 					buf := bytes.NewBufferString("")
 					html.Render(buf, replacement)
+					fmt.Println("1 " + string(buf.Bytes()))
 					t.Apply(transform.Replace(replacement), "[data-lift="+function.Val+"]")
 					t.Apply(removeAttrib("data-lift"), "[data-lift="+function.Val+"]")
 				} else {
