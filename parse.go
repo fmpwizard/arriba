@@ -31,6 +31,7 @@ func Process(in []byte) []byte {
 					buf := bytes.NewBufferString("")
 					html.Render(buf, replacement)
 					t.Apply(transform.Replace(replacement), "[data-lift="+function.Val+"]")
+					t.Apply(removeAttrib("data-lift"), "[data-lift="+function.Val+"]")
 				} else {
 					fmt.Println("ERROR: " + err.Error())
 				}
@@ -51,4 +52,21 @@ func do(scopeFunction string, snippetHTML *html.Node) (*html.Node, error) {
 	} else {
 		return &html.Node{}, errors.New("Did not find function: '" + scopeFunction + "'")
 	}
+}
+
+func removeAttrib(key string) transform.TransformFunc {
+	return func(n *html.Node) {
+		for i, attr := range n.Attr {
+			if attr.Key == key {
+				n.Attr = delete(n.Attr, i)
+			}
+		}
+	}
+}
+
+func delete(a []html.Attribute, i int) []html.Attribute {
+	copy(a[i:], a[i+1:])
+	a[len(a)-1] = html.Attribute{} // or the zero value of T
+	a = a[:len(a)-1]
+	return a
 }

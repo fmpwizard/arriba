@@ -17,7 +17,7 @@ func init() {
 func TestMarshallElemDifferentSnippets(t *testing.T) {
 	res := Process([]byte(html1))
 	if string(res) != html1Expected {
-		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html1Expected, res)
+		t.Errorf("Got a different html, expeted: \n%v\n but got:\n%v\n", html1Expected, string(res))
 	}
 }
 
@@ -155,7 +155,7 @@ func ChangeName(node *html.Node) *html.Node {
 	tree := h5.NewTree(node)
 	t := transform.New(&tree)
 	replacement := h5.Text("Hayley")
-	t.Apply(transform.Replace(replacement), "p")
+	t.Apply(transform.ReplaceChildren(replacement), "name=name")
 	return t.Doc()
 }
 
@@ -163,6 +163,6 @@ func ChangeLastName(node *html.Node) *html.Node {
 	tree := h5.NewTree(node)
 	t := transform.New(&tree)
 	replacement := h5.Text("Bauman")
-	t.Apply(transform.Replace(replacement), "span>span")
+	t.Apply(transform.ReplaceChildren(replacement), "p")
 	return t.Doc()
 }
